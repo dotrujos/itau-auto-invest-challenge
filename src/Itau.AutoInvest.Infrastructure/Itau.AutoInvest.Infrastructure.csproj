@@ -6,4 +6,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Itau.AutoInvest.Application\Itau.AutoInvest.Application.csproj" />
+      <ProjectReference Include="..\Itau.AutoInvest.Domain\Itau.AutoInvest.Domain.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -17,4 +17,8 @@
       </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Itau.AutoInvest.Infrastructure\Itau.AutoInvest.Infrastructure.csproj" />
+    </ItemGroup>
+
 </Project>

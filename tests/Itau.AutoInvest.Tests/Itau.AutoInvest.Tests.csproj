@@ -18,4 +18,10 @@
         <Using Include="Xunit"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Itau.AutoInvest.Application\Itau.AutoInvest.Application.csproj" />
+      <ProjectReference Include="..\..\src\Itau.AutoInvest.Domain\Itau.AutoInvest.Domain.csproj" />
+      <ProjectReference Include="..\..\src\Itau.AutoInvest.Infrastructure\Itau.AutoInvest.Infrastructure.csproj" />
+    </ItemGroup>
+
 </Project>
