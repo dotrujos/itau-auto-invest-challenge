@@ -1,4 +1,8 @@
-﻿using Itau.AutoInvest.Infrastructure.Context;
+﻿using Itau.AutoInvest.Application.Abstractions;
+using Itau.AutoInvest.Application.Jobs.CotahistIngestion;
+using Itau.AutoInvest.Infrastructure.Context;
+using Itau.AutoInvest.Infrastructure.Handlers;
+using Itau.AutoInvest.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +22,10 @@ public static class Extensions
                 services.AddDbContext<DatabaseContext>(options =>
                     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
             }
+
+            services.AddScoped<IFileExplorer, FileExplorer>();
+            services.AddScoped<IStockRepository, StockRepository>();
+            services.AddHostedService<CotahistIngestionJob>();
 
             return services;
         }
