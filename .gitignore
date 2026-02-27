@@ -671,4 +671,4 @@ fabric.properties
 # End of https://www.toptal.com/developers/gitignore/api/csharp,visualstudio,jetbrains+all
 
 .DS_Store
-application.*.json
+appsettings.*.json
