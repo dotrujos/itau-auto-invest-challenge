@@ -9,6 +9,7 @@
     <File Path="docs\glossario-compra-programada.md" />
     <File Path="docs\layout-cotahist-b3.md" />
     <File Path="docs\regras-negocio-detalhadas.md" />
+    <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Itau.AutoInvest.Application/Itau.AutoInvest.Application.csproj" />
