@@ -14,7 +14,10 @@ public class DatabaseContext : DbContext
     public DbSet<DistributionsTable> Distributions { get; set; }
     public DbSet<IREventsTable> IREvents { get; set; }
     public DbSet<RebalancesTable> Rebalances { get; set; }
-
+    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
+    {
+        
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DatabaseContext).Assembly);
