@@ -1,0 +1,7 @@
+﻿services:
+  itau.autoinvest.webapi:
+    image: itau.autoinvest.webapi
+    build:
+      context: .
+      dockerfile: src/Itau.AutoInvest.WebApi/Dockerfile
+
