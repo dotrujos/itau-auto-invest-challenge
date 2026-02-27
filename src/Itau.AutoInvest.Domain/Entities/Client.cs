@@ -1,0 +1,49 @@
+using Itau.AutoInvest.Domain.Enums;
+using Itau.AutoInvest.Domain.ValueObjects;
+
+namespace Itau.AutoInvest.Domain.Entities;
+
+public class Client
+{
+    public long Id { get; private set; }
+    public string Name { get; private set; }
+    public CpfValueObject Cpf { get; private set; }
+    public EmailValueObject Email { get; private set; }
+    public decimal MonthlyInvestment { get; private set; }
+    public bool IsActive { get; private set; }
+    public DateTime RegistrationDate { get; private set; }
+    
+    private Client() { }
+
+    public Client(string name, string cpf, string email, decimal monthlyInvestment)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("O nome do cliente nao pode ser vazio.", nameof(name));
+        if (string.IsNullOrWhiteSpace(cpf)) 
+            throw new ArgumentException("O CPF do cliente nao pode ser vazio.", nameof(cpf));
+        if (string.IsNullOrWhiteSpace(email)) 
+            throw new ArgumentException("O e-mail do cliente nao pode ser vazio.", nameof(email));
+        if (monthlyInvestment < 100) 
+            throw new ArgumentException("O valor mensal de aporte deve ser de no minimo R$ 100,00.", nameof(monthlyInvestment));
+
+        Name = name;
+        Cpf = new CpfValueObject(cpf);
+        Email = new EmailValueObject(email);
+        MonthlyInvestment = monthlyInvestment;
+        IsActive = true;
+        RegistrationDate = DateTime.UtcNow; 
+    }
+
+    public void UpdateMonthlyInvestment(decimal newAmount)
+    {
+        if (newAmount < 100)
+            throw new ArgumentException("O novo valor mensal de aporte deve ser de no minimo R$ 100,00.", nameof(newAmount));
+        
+        MonthlyInvestment = newAmount;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+    }
+}
