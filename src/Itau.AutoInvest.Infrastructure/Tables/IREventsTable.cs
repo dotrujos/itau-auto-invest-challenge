@@ -10,11 +10,11 @@ public class IREventsTable
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public BigInteger Id { get; set; }
+    public long Id { get; set; }
     
     [Required]
     [Column("ClienteId")]
-    public BigInteger ClientId { get; set; }
+    public long ClientId { get; set; }
     public ClientsTable Client { get; set; }
     
     [Required]

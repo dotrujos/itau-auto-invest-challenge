@@ -9,11 +9,11 @@ public class BasketItemsTable
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public BigInteger Id { get; set; }
+    public long Id { get; set; }
     
     [Required]
     [Column("CestaId")]
-    public BigInteger ParentBasketId { get; set; }
+    public long ParentBasketId { get; set; }
     public BasketRecommendationTable ParentBasket { get; set; }
     
     [Required]

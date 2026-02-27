@@ -9,11 +9,11 @@ public class CustodiesTable
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public BigInteger Id { get; set; }
+    public long Id { get; set; }
     
     [Required]
     [Column("ContaGraficaId")]
-    public BigInteger GraphicalAccountId { get; set; }
+    public long GraphicalAccountId { get; set; }
     public GraphicalAccountsTable GraphicalAccount { get; set; }
     
     [Required]

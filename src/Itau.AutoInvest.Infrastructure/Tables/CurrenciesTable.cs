@@ -9,7 +9,7 @@ public class CurrenciesTable
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public BigInteger Id { get; set; }
+    public long Id { get; set; }
 
     [Column("DataPregao")] 
     public DateTime PreachDate { get; set; }

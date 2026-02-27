@@ -9,16 +9,16 @@ public class DistributionsTable
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public BigInteger Id { get; set; }
+    public long Id { get; set; }
     
     [Required]
     [Column("OrdemCompraId")]
-    public BigInteger BuyOrderId { get; set; }
+    public long BuyOrderId { get; set; }
     public BuyOrderTable BuyOrder { get; set; }
     
     [Required]
     [Column("CustodiaFilhoteId")]
-    public BigInteger CustodyId { get; set; }
+    public long CustodyId { get; set; }
     public CustodiesTable Custody { get; set; }
 
     [Required]

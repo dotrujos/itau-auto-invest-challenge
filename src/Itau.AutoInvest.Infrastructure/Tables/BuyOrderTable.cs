@@ -10,11 +10,11 @@ public class BuyOrderTable
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public BigInteger Id { get; set; }
+    public long Id { get; set; }
     
     [Required]
     [Column("ContaMasterId")]
-    public BigInteger GraphicalAccountId { get; set; }
+    public long GraphicalAccountId { get; set; }
     public GraphicalAccountsTable GraphicalAccount { get; set; }
 
     [Required]
