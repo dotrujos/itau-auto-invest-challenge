@@ -1,8 +1,5 @@
 namespace Itau.AutoInvest.Domain.Entities;
 
-/// <summary>
-/// Representa a cotacao de um ativo em um determinado pregao.
-/// </summary>
 public class StockQuote
 {
     public long Id { get; private set; }
@@ -13,7 +10,6 @@ public class StockQuote
     public decimal MaximumPrice { get; private set; }
     public decimal MinimumPrice { get; private set; }
     
-    // Construtor para EF Core
     private StockQuote() { }
 
     public StockQuote(DateTime tradingDay, string ticker, decimal openingPrice, decimal closingPrice, decimal maximumPrice, decimal minimumPrice)
@@ -21,6 +17,18 @@ public class StockQuote
         if (string.IsNullOrWhiteSpace(ticker))
             throw new ArgumentException("Ticker nao pode ser vazio.", nameof(ticker));
 
+        TradingDay = tradingDay;
+        Ticker = ticker;
+        OpeningPrice = openingPrice;
+        ClosingPrice = closingPrice;
+        MaximumPrice = maximumPrice;
+        MinimumPrice = minimumPrice;
+    }
+    
+    // Construtor para reconstrucao a partir da persistencia
+    public StockQuote(long id, DateTime tradingDay, string ticker, decimal openingPrice, decimal closingPrice, decimal maximumPrice, decimal minimumPrice)
+    {
+        Id = id;
         TradingDay = tradingDay;
         Ticker = ticker;
         OpeningPrice = openingPrice;

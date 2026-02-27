@@ -32,4 +32,15 @@ public class BuyOrder
         MarketType = marketType;
         ExecutionDate = DateTime.UtcNow;
     }
+    
+    public BuyOrder(long id, long masterAccountId, string ticker, int quantity, decimal unitPrice, MarketType marketType, DateTime executionDate)
+    {
+        Id = id;
+        MasterAccountId = masterAccountId;
+        Ticker = ticker;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+        MarketType = marketType;
+        ExecutionDate = executionDate;
+    }
 }

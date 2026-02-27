@@ -18,4 +18,11 @@ public class BasketItem
         Ticker = ticker;
         Percentage = percentage;
     }
+    
+    public BasketItem(long id, string ticker, decimal percentage)
+    {
+        Id = id;
+        Ticker = ticker;
+        Percentage = percentage;
+    }
 }

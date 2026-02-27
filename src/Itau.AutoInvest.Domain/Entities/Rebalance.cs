@@ -33,4 +33,15 @@ public class Rebalance
         SalesValue = salesValue;
         DateRebalancing = DateTime.UtcNow;
     }
+    
+    public Rebalance(long id, long clientId, RebalanceType rebalanceType, string tickerSold, string tickerPurchased, decimal salesValue, DateTime dateRebalancing)
+    {
+        Id = id;
+        ClientId = clientId;
+        RebalanceType = rebalanceType;
+        TickerSold = tickerSold;
+        TickerPurchased = tickerPurchased;
+        SalesValue = salesValue;
+        DateRebalancing = dateRebalancing;
+    }
 }

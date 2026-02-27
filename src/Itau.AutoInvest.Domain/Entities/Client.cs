@@ -33,6 +33,17 @@ public class Client
         IsActive = true;
         RegistrationDate = DateTime.UtcNow; 
     }
+    
+    public Client(long id, string name, CpfValueObject cpf, EmailValueObject email, decimal monthlyInvestment, bool isActive, DateTime registrationDate)
+    {
+        Id = id;
+        Name = name;
+        Cpf = cpf;
+        Email = email;
+        MonthlyInvestment = monthlyInvestment;
+        IsActive = isActive;
+        RegistrationDate = registrationDate;
+    }
 
     public void UpdateMonthlyInvestment(decimal newAmount)
     {

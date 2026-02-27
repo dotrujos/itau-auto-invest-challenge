@@ -30,6 +30,17 @@ public class IREvent
         IsPublishedOnKafka = false; // O estado inicial e sempre "nao publicado"
         EventDate = DateTime.UtcNow;
     }
+    
+    public IREvent(long id, long clientId, IREventType eventType, decimal baseValue, decimal irValue, bool isPublishedOnKafka, DateTime eventDate)
+    {
+        Id = id;
+        ClientId = clientId;
+        EventType = eventType;
+        BaseValue = baseValue;
+        IRValue = irValue;
+        IsPublishedOnKafka = isPublishedOnKafka;
+        EventDate = eventDate;
+    }
 
     public void MarkAsPublished()
     {

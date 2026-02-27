@@ -24,4 +24,13 @@ public class GraphicalAccount
         AccountType = accountType;
         CreatedAt = DateTime.UtcNow;
     }
+    
+    public GraphicalAccount(long id, long clientId, string accountNumber, AccountType accountType, DateTime createdAt)
+    {
+        Id = id;
+        ClientId = clientId;
+        AccountNumber = accountNumber;
+        AccountType = accountType;
+        CreatedAt = createdAt;
+    }
 }

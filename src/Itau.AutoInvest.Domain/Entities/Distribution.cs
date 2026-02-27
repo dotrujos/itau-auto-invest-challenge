@@ -32,4 +32,15 @@ public class Distribution
         UnitPrice = unitPrice;
         DistributionDate = DateTime.UtcNow;
     }
+    
+    public Distribution(long id, long buyOrderId, long custodyId, string ticker, int quantity, decimal unitPrice, DateTime distributionDate)
+    {
+        Id = id;
+        BuyOrderId = buyOrderId;
+        CustodyId = custodyId;
+        Ticker = ticker;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+        DistributionDate = distributionDate;
+    }
 }

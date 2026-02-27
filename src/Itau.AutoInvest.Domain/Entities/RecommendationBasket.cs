@@ -30,6 +30,16 @@ public class RecommendationBasket
         CreatedAt = DateTime.UtcNow;
         DeactivationDate = null;
     }
+    
+    public RecommendationBasket(long id, string name, bool isActive, DateTime createdAt, DateTime? deactivationDate, List<BasketItem> items)
+    {
+        Id = id;
+        Name = name;
+        IsActive = isActive;
+        CreatedAt = createdAt;
+        DeactivationDate = deactivationDate;
+        _items = items;
+    }
 
     public void Deactivate()
     {
