@@ -4,6 +4,8 @@ using Itau.AutoInvest.Application.UseCases.CustomerAdoption;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.Implementations;
 using Itau.AutoInvest.Application.UseCases.CustomerExit;
 using Itau.AutoInvest.Application.UseCases.CustomerExit.Implementations;
+using Itau.AutoInvest.Application.UseCases.GetClientPortfolio;
+using Itau.AutoInvest.Application.UseCases.GetClientPortfolio.Implementations;
 using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment;
 using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment.Implementations;
 using Itau.AutoInvest.Infrastructure.Context;
@@ -30,15 +32,16 @@ public static class Extensions
             }
             
             services.AddScoped<IFileExplorer, FileExplorer>();
-            services.AddScoped<IStockRepository, StockRepository>();
-            services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>(); 
-            services.AddScoped<IClientRepository, ClientRepository>();
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
-            services.AddScoped<CustomerExit, CustomerExitImpl>();
-            services.AddScoped<UpdateMonthlyInvestment, UpdateMonthlyInvestmentImpl>();
-            services.AddHostedService<CotahistIngestionJob>();
-            
+                    services.AddScoped<IStockRepository, StockRepository>();
+                    services.AddScoped<ICustodyRepository, CustodyRepository>();
+                    services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
+                    services.AddScoped<IClientRepository, ClientRepository>();
+                    services.AddScoped<IUnitOfWork, UnitOfWork>();
+                    services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
+                    services.AddScoped<CustomerExit, CustomerExitImpl>();
+                    services.AddScoped<UpdateMonthlyInvestment, UpdateMonthlyInvestmentImpl>();
+                    services.AddScoped<GetClientPortfolio, GetClientPortfolioImpl>();
+                    services.AddHostedService<CotahistIngestionJob>();            
             return services;
         }
     }
