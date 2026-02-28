@@ -18,6 +18,8 @@ public class GraphicalAccountRepository : IGraphicalAccountRepository
     public async Task<GraphicalAccount> AddAndGenerateNumberAsync(GraphicalAccount account, CancellationToken ct)
     {
         var table = GraphicalAccountMapper.ToPersistence(account);
+        
+        table.AccountNumber = Guid.NewGuid().ToString().Substring(0, 19);
         _context.GraphicalAccounts.Add(table);
         
         await _context.SaveChangesAsync(ct);
