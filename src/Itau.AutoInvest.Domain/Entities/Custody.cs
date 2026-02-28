@@ -5,7 +5,7 @@ namespace Itau.AutoInvest.Domain.Entities;
 public class Custody
 {
     public long Id { get; private set; }
-    public long ClientId { get; private set; } 
+    public long AccountId { get; private set; } 
     public string Ticker { get; private set; }
     public int Quantity { get; private set; }
     public decimal AveragePrice { get; private set; }
@@ -13,10 +13,10 @@ public class Custody
     
     private Custody() { }
     
-    public Custody(long clientId, string ticker, int quantity, decimal purchasePrice)
+    public Custody(long accountId, string ticker, int quantity, decimal purchasePrice)
     {
-        if (clientId <= 0)
-            throw new ArgumentException("Id do cliente invalido.", nameof(clientId));
+        if (accountId <= 0)
+            throw new ArgumentException("Id da conta grafica invalido.", nameof(accountId));
         if (string.IsNullOrWhiteSpace(ticker))
             throw new ArgumentException("Ticker nao pode ser vazio.", nameof(ticker));
         if (quantity <= 0)
@@ -24,17 +24,17 @@ public class Custody
         if (purchasePrice <= 0)
             throw new ArgumentException("O preco de compra deve ser positivo.", nameof(purchasePrice));
 
-        ClientId = clientId;
+        AccountId = accountId;
         Ticker = ticker;
         Quantity = quantity;
         AveragePrice = purchasePrice;
         LastUpdate = DateTime.UtcNow;
     }
     
-    public Custody(long id, long clientId, string ticker, int quantity, decimal averagePrice, DateTime lastUpdate)
+    public Custody(long id, long accountId, string ticker, int quantity, decimal averagePrice, DateTime lastUpdate)
     {
         Id = id;
-        ClientId = clientId;
+        AccountId = accountId;
         Ticker = ticker;
         Quantity = quantity;
         AveragePrice = averagePrice;
