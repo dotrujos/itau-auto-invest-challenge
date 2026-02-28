@@ -10,51 +10,65 @@ public class CustomerAdoptionImpl : CustomerAdoption
 {
     private readonly IGraphicalAccountRepository _graphicalAccountRepository;
     private readonly IClientRepository _clientRepository;
+    private readonly IUnitOfWork _unitOfWork;
     
-    public CustomerAdoptionImpl(IGraphicalAccountRepository graphicalAccountRepository, IClientRepository clientRepository)
+    public CustomerAdoptionImpl(IGraphicalAccountRepository graphicalAccountRepository, IClientRepository clientRepository, IUnitOfWork unitOfWork)
     {
         _graphicalAccountRepository = graphicalAccountRepository;
         _clientRepository = clientRepository;
+        _unitOfWork = unitOfWork;
     }
 
     protected override async Task<CustomerAdoptionOutput> ApplyInternalLogicAsync(CustomerAdoptionInput input, CancellationToken ct)
     {
-        var existingClient = await _clientRepository.GetByCpfAsync(input.Cpf, ct);
-        if (existingClient != null)
+        await _unitOfWork.BeginTransactionAsync(ct);
+
+        try
         {
-            throw new InvalidOperationException("CPF ja cadastrado no sistema.");
-        }
-
-        var client = new Client(
-            input.Name,
-            input.Cpf,
-            input.Email,
-            input.MensalValue);
-
-        client = await _clientRepository.AddAsync(client, ct); 
-
-        var graphicalAccount = new GraphicalAccount(
-            client.Id,
-            AccountType.Filhote);
-        
-        graphicalAccount = await _graphicalAccountRepository.AddAndGenerateNumberAsync(graphicalAccount, ct);
-
-        return new CustomerAdoptionOutput()
-        {
-            ClientId = client.Id,
-            Cpf = client.Cpf.Number,
-            Email = client.Email.Email,
-            MensalValue = client.MonthlyInvestment,
-            Name = client.Name,
-            AdoptionDate = DateTime.UtcNow,
-            IsActive = client.IsActive,
-            GraphicalAccount = new GraphicalAccountDTO()
+            var existingClient = await _clientRepository.GetByCpfAsync(input.Cpf, ct);
+            if (existingClient != null)
             {
-                Id = graphicalAccount.Id,
-                AccountNumber = graphicalAccount.AccountNumber,
-                AccountType = graphicalAccount.AccountType.ToString(),
-                CreatedAt = graphicalAccount.CreatedAt
-            },
-        };
+                throw new InvalidOperationException("CPF ja cadastrado no sistema.");
+            }
+
+            var client = new Client(
+                input.Name,
+                input.Cpf,
+                input.Email,
+                input.MensalValue);
+
+            client = await _clientRepository.AddAsync(client, ct); 
+
+            var graphicalAccount = new GraphicalAccount(
+                client.Id,
+                AccountType.Filhote);
+            
+            graphicalAccount = await _graphicalAccountRepository.AddAndGenerateNumberAsync(graphicalAccount, ct);
+
+            await _unitOfWork.CommitAsync(ct);
+
+            return new CustomerAdoptionOutput()
+            {
+                ClientId = client.Id,
+                Cpf = client.Cpf.Number,
+                Email = client.Email.Email,
+                MensalValue = client.MonthlyInvestment,
+                Name = client.Name,
+                AdoptionDate = DateTime.UtcNow,
+                IsActive = client.IsActive,
+                GraphicalAccount = new GraphicalAccountDTO()
+                {
+                    Id = graphicalAccount.Id,
+                    AccountNumber = graphicalAccount.AccountNumber,
+                    AccountType = graphicalAccount.AccountType.ToString(),
+                    CreatedAt = graphicalAccount.CreatedAt
+                },
+            };
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync(ct);
+            throw;
+        }
     }
 }
