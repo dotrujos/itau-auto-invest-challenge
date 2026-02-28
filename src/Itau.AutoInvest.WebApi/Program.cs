@@ -1,4 +1,5 @@
 using Itau.AutoInvest.Infrastructure;
+using Itau.AutoInvest.WebApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,9 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = string.Empty; // Define o Swagger como página inicial
     });
 }
+
+// O Middleware de Exceção deve ser um dos primeiros no pipeline
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.MapControllers();
