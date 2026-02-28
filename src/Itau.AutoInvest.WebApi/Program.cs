@@ -33,11 +33,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Itau AutoInvest API v1");
-        c.RoutePrefix = string.Empty; // Define o Swagger como página inicial
+        c.RoutePrefix = string.Empty;
     });
 }
 
-// O Middleware de Exceção deve ser um dos primeiros no pipeline
+app.UseMiddleware<RequestIdMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
