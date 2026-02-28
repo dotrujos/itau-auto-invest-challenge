@@ -2,7 +2,7 @@ using Itau.AutoInvest.Application.Abstractions;
 using Itau.AutoInvest.Domain.Entities;
 using Itau.AutoInvest.Infrastructure.Context;
 using Itau.AutoInvest.Infrastructure.Mappers;
-using Itau.AutoInvest.Infrastructure.Tables;
+using Microsoft.EntityFrameworkCore;
 
 namespace Itau.AutoInvest.Infrastructure.Repositories;
 
@@ -17,18 +17,19 @@ public class StockRepository : IStockRepository
 
     public async Task SaveAsync(StockQuote stock, CancellationToken cancellationToken)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-        try
-        {
-            var currenciesTable = StockQuoteMapper.ToPersistence(stock);
-            await _context.Currencies.AddAsync(currenciesTable, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            // TODO: Logar o erro 
-        }
+        var table = StockQuoteMapper.ToPersistence(stock);
+        await _context.Currencies.AddAsync(table, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<StockQuote?> GetLatestQuoteAsync(string ticker, CancellationToken ct)
+    {
+        var table = await _context.Currencies
+            .AsNoTracking()
+            .Where(x => x.Ticker == ticker)
+            .OrderByDescending(x => x.PreachDate)
+            .FirstOrDefaultAsync(ct);
+            
+        return table != null ? StockQuoteMapper.ToDomain(table) : null;
     }
 }
