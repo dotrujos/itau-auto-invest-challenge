@@ -12,7 +12,7 @@ public class CustodiesTableConfiguration : IEntityTypeConfiguration<CustodiesTab
             .HasForeignKey(c => c.GraphicalAccountId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(x => x.Ticker).HasMaxLength(10);
+        builder.Property(x => x.Ticker).HasMaxLength(12);
         builder.Property(x => x.AvaragePrice).HasPrecision(18, 2);
     }
 }
