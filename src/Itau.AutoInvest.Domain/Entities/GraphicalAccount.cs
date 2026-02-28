@@ -33,4 +33,9 @@ public class GraphicalAccount
         AccountType = accountType;
         CreatedAt = createdAt;
     }
+    
+    public void GenerateAccountNumber()
+    { 
+        AccountNumber = $"FLH-{Id:D6}";
+    }
 }
