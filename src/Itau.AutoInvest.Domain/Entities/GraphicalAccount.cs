@@ -12,15 +12,12 @@ public class GraphicalAccount
     
     private GraphicalAccount() { }
 
-    public GraphicalAccount(long clientId, string accountNumber, AccountType accountType)
+    public GraphicalAccount(long clientId, AccountType accountType)
     {
         if (clientId <= 0)
             throw new ArgumentException("Id do cliente invalido.", nameof(clientId));
-        if (string.IsNullOrWhiteSpace(accountNumber))
-            throw new ArgumentException("O numero da conta nao pode ser vazio.", nameof(accountNumber));
 
         ClientId = clientId;
-        AccountNumber = accountNumber;
         AccountType = accountType;
         CreatedAt = DateTime.UtcNow;
     }
