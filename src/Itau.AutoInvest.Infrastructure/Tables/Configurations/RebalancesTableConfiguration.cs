@@ -16,7 +16,7 @@ public class RebalancesTableConfiguration : IEntityTypeConfiguration<RebalancesT
         builder.Property(x => x.RebalanceType)
             .HasConversion<string>(
                 v => v.ToString().ToUpper(),
-                v => Enum.Parse<RebalanceType>(v))
+                v => Enum.Parse<RebalanceType>(v, true))
             .HasColumnType("ENUM('MUNDANCA_CESTA', 'DESVIO')");
 
         builder.Property(x => x.TickerPurchased).HasMaxLength(12);

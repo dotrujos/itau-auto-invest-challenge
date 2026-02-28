@@ -13,7 +13,7 @@ public class BuyOrderTableConfiguration : IEntityTypeConfiguration<BuyOrderTable
         builder.Property(x => x.MarketType)
             .HasConversion<string>(
                 v => v.ToString().ToUpper(),
-                v => Enum.Parse<MarketType>(v))
+                v => Enum.Parse<MarketType>(v, true))
             .HasColumnType("ENUM('LOTE','FRACIONARIO')");
     }
 }

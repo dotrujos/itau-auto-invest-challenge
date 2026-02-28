@@ -16,7 +16,7 @@ public class IREventsTableConfiguration : IEntityTypeConfiguration<IREventsTable
         builder.Property(x => x.EventType)
             .HasConversion<string>(
                 v => v.ToString().ToUpper(),
-                v => Enum.Parse<IREventType>(v))
+                v => Enum.Parse<IREventType>(v, true))
             .HasColumnType("ENUM('DEDO_DURO','IR_VENDA')");
 
         builder.Property(x => x.BaseValue).HasPrecision(18, 2);

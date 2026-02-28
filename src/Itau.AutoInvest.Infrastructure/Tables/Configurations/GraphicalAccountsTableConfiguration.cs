@@ -15,7 +15,7 @@ public class GraphicalAccountsTableConfiguration : IEntityTypeConfiguration<Grap
         builder.Property(x => x.AccountType)
             .HasConversion<string>(
                 v => v.ToString().ToUpper(),
-                v => Enum.Parse<AccountType>(v))
+                v => Enum.Parse<AccountType>(v, true))
             .HasColumnType("ENUM('MASTER', 'FILHOTE')");
 
         builder.HasOne(a => a.Client)
