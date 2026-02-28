@@ -4,6 +4,8 @@ using Itau.AutoInvest.Application.UseCases.CustomerAdoption;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.Implementations;
 using Itau.AutoInvest.Application.UseCases.CustomerExit;
 using Itau.AutoInvest.Application.UseCases.CustomerExit.Implementations;
+using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment;
+using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment.Implementations;
 using Itau.AutoInvest.Infrastructure.Context;
 using Itau.AutoInvest.Infrastructure.Handlers;
 using Itau.AutoInvest.Infrastructure.Repositories;
@@ -34,7 +36,8 @@ public static class Extensions
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
             services.AddScoped<CustomerExit, CustomerExitImpl>();
-            services.AddHostedService<CotahistIngestionJob>();            
+            services.AddScoped<UpdateMonthlyInvestment, UpdateMonthlyInvestmentImpl>();
+            services.AddHostedService<CotahistIngestionJob>();
             
             return services;
         }
