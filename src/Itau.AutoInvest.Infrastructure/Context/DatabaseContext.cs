@@ -14,6 +14,7 @@ public class DatabaseContext : DbContext
     public DbSet<DistributionsTable> Distributions { get; set; }
     public DbSet<IREventsTable> IREvents { get; set; }
     public DbSet<RebalancesTable> Rebalances { get; set; }
+    public DbSet<GraphicalAccountsTable> GraphicalAccounts { get; set; }
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
     {
         
