@@ -10,6 +10,8 @@ using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability;
 using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability.Implementations;
 using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment;
 using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment.Implementations;
+using Itau.AutoInvest.Application.UseCases.UpdateRecommendationBasket;
+using Itau.AutoInvest.Application.UseCases.UpdateRecommendationBasket.Implementations;
 using Itau.AutoInvest.Infrastructure.Context;
 using Itau.AutoInvest.Infrastructure.Handlers;
 using Itau.AutoInvest.Infrastructure.Repositories;
@@ -37,6 +39,7 @@ public static class Extensions
             services.AddScoped<IStockRepository, StockRepository>();
             services.AddScoped<ICustodyRepository, CustodyRepository>();
             services.AddScoped<IDistributionRepository, DistributionRepository>();
+            services.AddScoped<IBasketRepository, BasketRepository>();
             services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
             services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -45,7 +48,8 @@ public static class Extensions
             services.AddScoped<UpdateMonthlyInvestment, UpdateMonthlyInvestmentImpl>();
             services.AddScoped<GetClientPortfolio, GetClientPortfolioImpl>();
             services.AddScoped<GetDetailedProfitability, GetDetailedProfitabilityImpl>();
-            services.AddHostedService<CotahistIngestionJob>();            
+            services.AddScoped<UpdateRecommendationBasket, UpdateRecommendationBasketImpl>();
+            services.AddHostedService<CotahistIngestionJob>();         
             
             return services;
         }
