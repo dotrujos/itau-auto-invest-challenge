@@ -25,6 +25,15 @@ public class ClientRepository : IClientRepository
         return ClientMapper.ToDomain(table);
     }
 
+    public async Task<Client?> GetByIdAsync(long id, CancellationToken ct)
+    {
+        var table = await _context.Clients
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
+            
+        return table != null ? ClientMapper.ToDomain(table) : null;
+    }
+
     public async Task<Client?> GetByCpfAsync(string cpf, CancellationToken ct)
     {
         var table = await _context.Clients

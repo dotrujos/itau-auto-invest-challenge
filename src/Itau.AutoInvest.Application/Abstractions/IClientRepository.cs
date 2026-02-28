@@ -10,6 +10,11 @@ public interface IClientRepository
     Task<Client> AddAsync(Client client, CancellationToken ct);
 
     /// <summary>
+    /// Busca um cliente pelo ID.
+    /// </summary>
+    Task<Client?> GetByIdAsync(long id, CancellationToken ct);
+
+    /// <summary>
     /// Busca um cliente pelo CPF (RN-002).
     /// </summary>
     Task<Client?> GetByCpfAsync(string cpf, CancellationToken ct);

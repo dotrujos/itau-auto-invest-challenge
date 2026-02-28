@@ -2,6 +2,8 @@
 using Itau.AutoInvest.Application.Jobs.CotahistIngestion;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.Implementations;
+using Itau.AutoInvest.Application.UseCases.CustomerExit;
+using Itau.AutoInvest.Application.UseCases.CustomerExit.Implementations;
 using Itau.AutoInvest.Infrastructure.Context;
 using Itau.AutoInvest.Infrastructure.Handlers;
 using Itau.AutoInvest.Infrastructure.Repositories;
@@ -24,14 +26,16 @@ public static class Extensions
                 services.AddDbContext<DatabaseContext>(options =>
                     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
             }
-
-                    services.AddScoped<IFileExplorer, FileExplorer>();
-                    services.AddScoped<IStockRepository, StockRepository>();
-                    services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
-                    services.AddScoped<IClientRepository, ClientRepository>();
-                    services.AddScoped<IUnitOfWork, UnitOfWork>();
-                    services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
-                    services.AddHostedService<CotahistIngestionJob>();
+            
+            services.AddScoped<IFileExplorer, FileExplorer>();
+            services.AddScoped<IStockRepository, StockRepository>();
+            services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>(); 
+            services.AddScoped<IClientRepository, ClientRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
+            services.AddScoped<CustomerExit, CustomerExitImpl>();
+            services.AddHostedService<CotahistIngestionJob>();            
+            
             return services;
         }
     }
