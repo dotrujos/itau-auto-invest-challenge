@@ -25,13 +25,13 @@ public static class Extensions
                     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
             }
 
-            services.AddScoped<IFileExplorer, FileExplorer>();
-            services.AddScoped<IStockRepository, StockRepository>();
-            services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
-            services.AddScoped<IClientRepository, ClientRepository>();
-            services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
-            services.AddHostedService<CotahistIngestionJob>();
-
+                    services.AddScoped<IFileExplorer, FileExplorer>();
+                    services.AddScoped<IStockRepository, StockRepository>();
+                    services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
+                    services.AddScoped<IClientRepository, ClientRepository>();
+                    services.AddScoped<IUnitOfWork, UnitOfWork>();
+                    services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
+                    services.AddHostedService<CotahistIngestionJob>();
             return services;
         }
     }
