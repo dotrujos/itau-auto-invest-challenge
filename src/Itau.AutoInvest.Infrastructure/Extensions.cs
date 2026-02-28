@@ -25,6 +25,8 @@ public static class Extensions
 
             services.AddScoped<IFileExplorer, FileExplorer>();
             services.AddScoped<IStockRepository, StockRepository>();
+            services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
+            services.AddScoped<IClientRepository, ClientRepository>();
             services.AddHostedService<CotahistIngestionJob>();
 
             return services;
