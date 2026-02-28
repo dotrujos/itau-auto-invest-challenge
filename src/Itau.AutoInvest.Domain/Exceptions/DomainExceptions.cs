@@ -45,6 +45,12 @@ public class BasketNotFoundException : BaseDomainException
 }
 
 // Erros de Motor / Cotações
+public class EntityNotFoundException : BaseDomainException
+{
+    public EntityNotFoundException(string entityName) 
+        : base($"{entityName} nao encontrado.", $"{entityName.ToUpper()}_NAO_ENCONTRADO") { }
+}
+
 public class QuoteNotFoundException : BaseDomainException
 {
     public QuoteNotFoundException(DateTime date) 
