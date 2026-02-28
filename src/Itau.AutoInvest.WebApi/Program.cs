@@ -7,6 +7,7 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
 builder.Services.AddApplicationCoreLogic(
     builder.Configuration);
 
@@ -19,6 +20,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.MapControllers();
 
 app.Run();
