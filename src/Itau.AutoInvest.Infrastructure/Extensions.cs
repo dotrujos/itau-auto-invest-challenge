@@ -4,6 +4,8 @@ using Itau.AutoInvest.Application.UseCases.CustomerAdoption;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.Implementations;
 using Itau.AutoInvest.Application.UseCases.CustomerExit;
 using Itau.AutoInvest.Application.UseCases.CustomerExit.Implementations;
+using Itau.AutoInvest.Application.UseCases.GetActiveBasket;
+using Itau.AutoInvest.Application.UseCases.GetActiveBasket.Implementations;
 using Itau.AutoInvest.Application.UseCases.GetClientPortfolio;
 using Itau.AutoInvest.Application.UseCases.GetClientPortfolio.Implementations;
 using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability;
@@ -48,9 +50,9 @@ public static class Extensions
             services.AddScoped<UpdateMonthlyInvestment, UpdateMonthlyInvestmentImpl>();
             services.AddScoped<GetClientPortfolio, GetClientPortfolioImpl>();
             services.AddScoped<GetDetailedProfitability, GetDetailedProfitabilityImpl>();
-            services.AddScoped<UpdateRecommendationBasket, UpdateRecommendationBasketImpl>();
-            services.AddHostedService<CotahistIngestionJob>();         
-            
+                                services.AddScoped<UpdateRecommendationBasket, UpdateRecommendationBasketImpl>();
+                                services.AddScoped<GetActiveBasket, GetActiveBasketImpl>();
+                                services.AddHostedService<CotahistIngestionJob>();            
             return services;
         }
     }
