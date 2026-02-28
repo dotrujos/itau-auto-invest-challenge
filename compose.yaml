@@ -1,7 +1,24 @@
 ﻿services:
+  mysql:
+    image: mysql:8.0
+    container_name: itau.autoinvest.db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: itau.password
+      MYSQL_DATABASE: itau.db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
   itau.autoinvest.webapi:
     image: itau.autoinvest.webapi
     build:
       context: .
       dockerfile: src/Itau.AutoInvest.WebApi/Dockerfile
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
 
