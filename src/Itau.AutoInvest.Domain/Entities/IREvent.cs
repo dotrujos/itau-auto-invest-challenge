@@ -1,4 +1,5 @@
 using Itau.AutoInvest.Domain.Enums;
+using Itau.AutoInvest.Domain.Exceptions;
 
 namespace Itau.AutoInvest.Domain.Entities;
 

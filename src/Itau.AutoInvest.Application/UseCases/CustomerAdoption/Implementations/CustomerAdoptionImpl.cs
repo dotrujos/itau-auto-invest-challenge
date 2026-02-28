@@ -3,6 +3,7 @@ using Itau.AutoInvest.Application.DTOs;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.IO;
 using Itau.AutoInvest.Domain.Entities;
 using Itau.AutoInvest.Domain.Enums;
+using Itau.AutoInvest.Domain.Exceptions;
 
 namespace Itau.AutoInvest.Application.UseCases.CustomerAdoption.Implementations;
 
@@ -28,7 +29,7 @@ public class CustomerAdoptionImpl : CustomerAdoption
             var existingClient = await _clientRepository.GetByCpfAsync(input.Cpf, ct);
             if (existingClient != null)
             {
-                throw new InvalidOperationException("CPF ja cadastrado no sistema.");
+                throw new DuplicateCpfException();
             }
 
             var client = new Client(

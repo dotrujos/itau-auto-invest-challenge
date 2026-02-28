@@ -1,3 +1,5 @@
+using Itau.AutoInvest.Domain.Exceptions;
+
 namespace Itau.AutoInvest.Domain.Entities;
 
 public class RecommendationBasket
@@ -19,10 +21,11 @@ public class RecommendationBasket
             throw new ArgumentException("O nome da cesta nao pode ser vazio.", nameof(name));
         
         if (items.Count != 5)
-            throw new InvalidOperationException("A cesta de recomendacao deve conter exatamente 5 ativos.");
+            throw new InvalidBasketQuantityException(items.Count);
         
-        if (items.Sum(i => i.Percentage) != 100)
-            throw new InvalidOperationException("A soma dos percentuais dos ativos na cesta deve ser exatamente 100%.");
+        var percentageSum = items.Sum(i => i.Percentage);
+        if (percentageSum != 100)
+            throw new InvalidBasketPercentageException(percentageSum);
 
         Name = name;
         _items = items;

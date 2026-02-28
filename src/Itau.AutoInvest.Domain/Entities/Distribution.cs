@@ -1,3 +1,5 @@
+using Itau.AutoInvest.Domain.Exceptions;
+
 namespace Itau.AutoInvest.Domain.Entities;
 
 public class Distribution
