@@ -1,5 +1,7 @@
 ﻿using Itau.AutoInvest.Application.Abstractions;
 using Itau.AutoInvest.Application.Jobs.CotahistIngestion;
+using Itau.AutoInvest.Application.UseCases.CustomerAdoption;
+using Itau.AutoInvest.Application.UseCases.CustomerAdoption.Implementations;
 using Itau.AutoInvest.Infrastructure.Context;
 using Itau.AutoInvest.Infrastructure.Handlers;
 using Itau.AutoInvest.Infrastructure.Repositories;
@@ -27,6 +29,7 @@ public static class Extensions
             services.AddScoped<IStockRepository, StockRepository>();
             services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
             services.AddScoped<IClientRepository, ClientRepository>();
+            services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
             services.AddHostedService<CotahistIngestionJob>();
 
             return services;
