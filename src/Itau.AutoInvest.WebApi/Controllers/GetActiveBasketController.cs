@@ -18,8 +18,7 @@ public class GetActiveBasketController : ControllerBase
     [HttpGet("atual")]
     public async Task<IActionResult> GetActive(CancellationToken ct)
     {
-        var input = new GetActiveBasketInput();
-        var output = await _getActiveBasket.ExecuteAsync(input, ct);
+        var output = await _getActiveBasket.ExecuteAsync(ct);
         
         return Ok(output);
     }
