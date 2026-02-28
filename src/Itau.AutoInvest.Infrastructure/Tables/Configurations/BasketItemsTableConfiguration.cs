@@ -11,7 +11,7 @@ public class BasketItemsTableConfiguration : IEntityTypeConfiguration<BasketItem
         builder.Property(x => x.Percentage).HasPrecision(5, 2);
 
         builder.HasOne(bi => bi.ParentBasket)
-            .WithMany()
+            .WithMany(br => br.Items)
             .HasForeignKey(bi => bi.ParentBasketId)
             .OnDelete(DeleteBehavior.Cascade);
     }

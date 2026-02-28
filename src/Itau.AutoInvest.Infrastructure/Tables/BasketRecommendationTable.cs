@@ -23,6 +23,8 @@ public class BasketRecommendationTable
     [Column("DataCriacao")]
     public DateTime CreatedAt { get; set; }
     
+    public List<BasketItemsTable> Items { get; set; }
+    
     [Column("DataDesativacao")]
     public DateTime DeactivationDate { get; set; }
 }
