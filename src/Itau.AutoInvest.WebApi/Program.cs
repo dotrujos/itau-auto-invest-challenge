@@ -3,7 +3,7 @@ using Itau.AutoInvest.WebApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: false);
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
