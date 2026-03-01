@@ -2,6 +2,7 @@ using Itau.AutoInvest.Application.Abstractions;
 using Itau.AutoInvest.Application.UseCases.GetClientPortfolio.IO;
 using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability.IO;
 using Itau.AutoInvest.Domain.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Itau.AutoInvest.Application.UseCases.GetDetailedProfitability.Implementations;
 
@@ -12,31 +13,46 @@ public class GetDetailedProfitabilityImpl : GetDetailedProfitability
     private readonly IDistributionRepository _distributionRepository;
     private readonly ICustodyRepository _custodyRepository;
     private readonly IStockRepository _stockRepository;
+    private readonly ILogger<GetDetailedProfitabilityImpl> _logger;
 
     public GetDetailedProfitabilityImpl(
         IClientRepository clientRepository,
         IGraphicalAccountRepository graphicalAccountRepository,
         IDistributionRepository distributionRepository,
         ICustodyRepository custodyRepository,
-        IStockRepository stockRepository)
+        IStockRepository stockRepository,
+        ILogger<GetDetailedProfitabilityImpl> logger)
     {
         _clientRepository = clientRepository;
         _graphicalAccountRepository = graphicalAccountRepository;
         _distributionRepository = distributionRepository;
         _custodyRepository = custodyRepository;
         _stockRepository = stockRepository;
+        _logger = logger;
     }
 
     protected override async Task<GetDetailedProfitabilityOutput> ApplyInternalLogicAsync(GetDetailedProfitabilityInput input, CancellationToken ct)
     {
+        _logger.LogInformation("Consultando rentabilidade detalhada do cliente: {ClientId}", input.ClientId);
+
         var client = await _clientRepository.GetByIdAsync(input.ClientId, ct);
-        if (client == null) throw new ClientNotFoundException();
+        if (client == null) 
+        {
+            _logger.LogWarning("Rentabilidade solicitada para cliente inexistente: {ClientId}", input.ClientId);
+            throw new ClientNotFoundException();
+        }
 
         var account = await _graphicalAccountRepository.GetByClientIdAsync(client.Id, ct);
-        if (account == null) throw new EntityNotFoundException("CONTA_GRAFICA");
+        if (account == null) 
+        {
+            _logger.LogError("Conta gráfica não encontrada para o cliente {ClientId}", client.Id);
+            throw new EntityNotFoundException("CONTA_GRAFICA");
+        }
         
-        var distributions = await _distributionRepository.GetByAccountIdAsync(account.Id, ct);
+        var distributions = (await _distributionRepository.GetByAccountIdAsync(account.Id, ct)).ToList();
         
+        _logger.LogInformation("Cliente {ClientId} possui {Count} registros de distribuição para cálculo de rentabilidade.", client.Id, distributions.Count);
+
         var groupedByDate = distributions.GroupBy(d => d.DistributionDate.Date)
             .OrderBy(g => g.Key)
             .ToList();
@@ -45,7 +61,6 @@ public class GetDetailedProfitabilityImpl : GetDetailedProfitability
         var evolutionHistory = new List<EvolutionHistoryItem>();
 
         decimal cumulativeInvested = 0;
-        decimal cumulativePortfolioValue = 0;
 
         foreach (var group in groupedByDate)
         {
@@ -96,6 +111,8 @@ public class GetDetailedProfitabilityImpl : GetDetailedProfitability
         decimal totalProfitLossPercentage = totalInvestedNow > 0 
             ? ((currentTotalValueNow / totalInvestedNow) - 1) * 100 
             : 0;
+
+        _logger.LogInformation("Consulta de rentabilidade concluída para o cliente {ClientId}. Rentabilidade Atual: {Profitability}%", client.Id, Math.Round(totalProfitLossPercentage, 2));
 
         return new GetDetailedProfitabilityOutput(
             client.Id,
