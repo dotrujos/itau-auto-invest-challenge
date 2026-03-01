@@ -40,6 +40,7 @@ public static class Extensions
         }
         
         services.AddScoped<IFileExplorer, FileExplorer>();
+        services.AddSingleton<IKafkaProducer, KafkaProducer>();
         services.AddScoped<IStockRepository, StockRepository>();
         services.AddScoped<ICustodyRepository, CustodyRepository>();
         services.AddScoped<IDistributionRepository, DistributionRepository>();
@@ -47,6 +48,8 @@ public static class Extensions
         services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
         services.AddScoped<IClientRepository, ClientRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IRebalanceRepository, RebalanceRepository>();
+        services.AddScoped<IIREventRepository, IREventRepository>();
         
         services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
         services.AddScoped<CustomerExit, CustomerExitImpl>();
