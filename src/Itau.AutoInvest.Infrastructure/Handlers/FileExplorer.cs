@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Itau.AutoInvest.Application.Abstractions;
+using Microsoft.Extensions.Configuration;
 
 namespace Itau.AutoInvest.Infrastructure.Handlers;
 
@@ -8,18 +9,30 @@ public class FileExplorer : IFileExplorer
     private readonly string _directoryPath;
     private const string FilePattern = @"COTAHIST_D(\d{8})\.TXT";
 
-    public FileExplorer()
+    public FileExplorer(IConfiguration configuration)
     {
-        _directoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cotacoes");
-
-        var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+        var configuredPath = configuration["CotacoesPath"];
         
-        while (currentDir != null && !currentDir.GetDirectories("src").Any())
+        if (!string.IsNullOrEmpty(configuredPath))
         {
-            currentDir = currentDir.Parent;
+            _directoryPath = configuredPath;
         }
-        
-        _directoryPath = Path.Combine(currentDir.FullName, "cotacoes");
+        else
+        {
+            _directoryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cotacoes");
+
+            var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            
+            while (currentDir != null && !currentDir.GetDirectories("src").Any())
+            {
+                currentDir = currentDir.Parent;
+            }
+            
+            if (currentDir != null)
+            {
+                _directoryPath = Path.Combine(currentDir.FullName, "cotacoes");
+            }
+        }
 
         if (!Directory.Exists(_directoryPath))
             Directory.CreateDirectory(_directoryPath);

@@ -9,6 +9,7 @@
 **/appsettings.*.json
 **/.env
 **/secrets.json
+appsettings.*.json
 
 # Git e Docker
 .git/

@@ -1,3 +1,4 @@
+using System;
 using Itau.AutoInvest.Application.Abstractions;
 using Itau.AutoInvest.Application.Jobs.CotahistIngestion;
 using Itau.AutoInvest.Application.Jobs.PurchaseScheduler;
@@ -39,7 +40,7 @@ public static class Extensions
         if (connectionString != null)
         {
             services.AddDbContext<DatabaseContext>(options =>
-                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+                options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 45))));
         }
         
         services.AddScoped<IFileExplorer, FileExplorer>();

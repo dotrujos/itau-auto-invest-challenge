@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: itau_autoinvest_db
+    container_name: itau.autoinvest.db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: minhasenha
@@ -10,6 +10,11 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-pminhasenha"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -33,14 +38,60 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
-  itau.autoinvest.webapi:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: itau.autoinvest.prometheus
+    volumes:
+      - .prometheus/config:/etc/prometheus
+      - .prometheus/container_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9092"
+
+  loki:
+    image: grafana/loki:latest
+    container_name: itau.autoinvest.loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: itau.autoinvest.grafana
+    depends_on:
+      - prometheus
+      - loki
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - .grafana/container_data:/var/lib/grafana
+
+  webapi:
     image: itau.autoinvest.webapi
     build:
       context: .
       dockerfile: src/Itau.AutoInvest.WebApi/Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://prometheus:9090
+    volumes:
+      - ./cotacoes:/app/cotacoes
     depends_on:
-      - mysql
-      - kafka
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      prometheus:
+        condition: service_started
+      loki:
+        condition: service_started
 
 volumes:
   mysql_data:

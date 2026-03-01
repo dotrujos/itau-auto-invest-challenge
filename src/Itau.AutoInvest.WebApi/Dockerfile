@@ -7,8 +7,14 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
 COPY ["src/Itau.AutoInvest.WebApi/Itau.AutoInvest.WebApi.csproj", "src/Itau.AutoInvest.WebApi/"]
+COPY ["src/Itau.AutoInvest.Application/Itau.AutoInvest.Application.csproj", "src/Itau.AutoInvest.Application/"]
+COPY ["src/Itau.AutoInvest.Domain/Itau.AutoInvest.Domain.csproj", "src/Itau.AutoInvest.Domain/"]
+COPY ["src/Itau.AutoInvest.Infrastructure/Itau.AutoInvest.Infrastructure.csproj", "src/Itau.AutoInvest.Infrastructure/"]
+
 RUN dotnet restore "src/Itau.AutoInvest.WebApi/Itau.AutoInvest.WebApi.csproj"
+
 COPY . .
 WORKDIR "/src/src/Itau.AutoInvest.WebApi"
 RUN dotnet build "./Itau.AutoInvest.WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
