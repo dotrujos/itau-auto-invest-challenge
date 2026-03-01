@@ -5,7 +5,7 @@ using System.Numerics;
 namespace Itau.AutoInvest.Infrastructure.Tables;
 
 [Table("Cotacoes")]
-public class CurrenciesTable
+public class StockQuoteTable
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

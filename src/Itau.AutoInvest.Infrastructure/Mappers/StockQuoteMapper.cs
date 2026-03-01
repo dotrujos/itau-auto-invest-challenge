@@ -5,11 +5,11 @@ namespace Itau.AutoInvest.Infrastructure.Mappers;
 
 public static class StockQuoteMapper
 {
-    public static CurrenciesTable ToPersistence(StockQuote domain)
+    public static StockQuoteTable ToPersistence(StockQuote domain)
     {
         if (domain == null) return null;
 
-        return new CurrenciesTable
+        return new StockQuoteTable
         {
             Id = domain.Id,
             PreachDate = domain.TradingDay,
@@ -21,7 +21,7 @@ public static class StockQuoteMapper
         };
     }
 
-    public static StockQuote ToDomain(CurrenciesTable table)
+    public static StockQuote ToDomain(StockQuoteTable table)
     {
         if (table == null) return null;
 

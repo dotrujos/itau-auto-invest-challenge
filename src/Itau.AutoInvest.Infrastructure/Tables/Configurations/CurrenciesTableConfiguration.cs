@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Itau.AutoInvest.Infrastructure.Tables.Configurations;
 
-public class CurrenciesTableConfiguration : IEntityTypeConfiguration<CurrenciesTable>
+public class CurrenciesTableConfiguration : IEntityTypeConfiguration<StockQuoteTable>
 {
-    public void Configure(EntityTypeBuilder<CurrenciesTable> builder)
+    public void Configure(EntityTypeBuilder<StockQuoteTable> builder)
     {
         builder.Property(x => x.Ticker).HasMaxLength(12);
         builder.Property(x => x.ClosingPrice).HasPrecision(18, 4);

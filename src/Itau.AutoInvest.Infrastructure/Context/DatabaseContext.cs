@@ -9,7 +9,7 @@ public class DatabaseContext : DbContext
     public DbSet<BasketRecommendationTable> BasketRecommendation { get; set; }
     public DbSet<BuyOrderTable> BuyOrder { get; set; }
     public DbSet<ClientsTable> Clients { get; set; }
-    public DbSet<CurrenciesTable> Currencies { get; set; }
+    public DbSet<StockQuoteTable> Currencies { get; set; }
     public DbSet<CustodiesTable> Custodies { get; set; }
     public DbSet<DistributionsTable> Distributions { get; set; }
     public DbSet<IREventsTable> IREvents { get; set; }
