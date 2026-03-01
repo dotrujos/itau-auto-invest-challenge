@@ -6,6 +6,7 @@ namespace Itau.AutoInvest.WebApi.Controllers;
 
 [ApiController]
 [Route("api/admin/cesta")]
+[Tags("Administrativo")]
 public class GetBasketHistoryController : ControllerBase
 {
     private readonly GetBasketHistory _getBasketHistory;
@@ -16,6 +17,9 @@ public class GetBasketHistoryController : ControllerBase
     }
 
     [HttpGet("historico")]
+    [EndpointSummary("Histórico de cestas")]
+    [EndpointDescription("Consulta o histórico de todas as cestas de recomendação (ativas e inativas).")]
+    [ProducesResponseType(typeof(GetBasketHistoryOutput), 200)]
     public async Task<IActionResult> GetHistory(CancellationToken ct)
     {
         var input = new GetBasketHistoryInput();

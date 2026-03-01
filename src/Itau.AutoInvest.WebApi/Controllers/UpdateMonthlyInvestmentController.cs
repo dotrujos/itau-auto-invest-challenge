@@ -6,6 +6,7 @@ namespace Itau.AutoInvest.WebApi.Controllers;
 
 [ApiController]
 [Route("api/clientes")]
+[Tags("Clientes")]
 public class UpdateMonthlyInvestmentController : ControllerBase
 {
     private readonly UpdateMonthlyInvestment _updateMonthlyInvestment;
@@ -16,6 +17,11 @@ public class UpdateMonthlyInvestmentController : ControllerBase
     }
 
     [HttpPut("{clienteId}/valor-mensal")]
+    [EndpointSummary("Atualizar aporte mensal")]
+    [EndpointDescription("Altera o valor do aporte mensal do cliente.")]
+    [ProducesResponseType(typeof(UpdateMonthlyInvestmentOutput), 200)]
+    [ProducesResponseType(typeof(ProblemDetails), 400)]
+    [ProducesResponseType(typeof(ProblemDetails), 404)]
     public async Task<IActionResult> UpdateValue([FromRoute] long clienteId, [FromBody] UpdateMonthlyInvestmentInput input, CancellationToken ct)
     {
         // Garante que o ID da rota seja o mesmo do input (que está ignorado no body)

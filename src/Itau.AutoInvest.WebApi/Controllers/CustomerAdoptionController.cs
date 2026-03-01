@@ -6,6 +6,7 @@ namespace Itau.AutoInvest.WebApi.Controllers;
 
 [ApiController]
 [Route("api/clientes")]
+[Tags("Clientes")]
 public class CustomerAdoptionController : ControllerBase
 {
     private readonly CustomerAdoption _customerAdoption;
@@ -16,6 +17,10 @@ public class CustomerAdoptionController : ControllerBase
     }
 
     [HttpPost("adesao")]
+    [EndpointSummary("Adesão do cliente")]
+    [EndpointDescription("Realiza a adesão do cliente ao produto de compra programada.")]
+    [ProducesResponseType(typeof(CustomerAdoptionOutput), 201)]
+    [ProducesResponseType(typeof(ProblemDetails), 400)]
     public async Task<IActionResult> Adopt([FromBody] CustomerAdoptionInput input, CancellationToken ct)
     {
         var output = await _customerAdoption.ExecuteAsync(input, ct);
