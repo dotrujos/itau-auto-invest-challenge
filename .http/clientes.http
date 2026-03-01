@@ -1,0 +1,36 @@
+@host = http://localhost:8080
+
+### 1.1. Aderir ao Produto
+POST {{host}}/api/clientes/adesao
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nome": "Joao da Silva",
+  "cpf": "12345678901",
+  "email": "joao.silva@email.com",
+  "valorMensal": 3000.00
+}
+
+### 1.2. Sair do Produto
+# Substitua {clienteId} pelo ID do cliente retornado na adesão
+@clienteId = 1
+POST {{host}}/api/clientes/{{clienteId}}/saida
+Accept: application/json
+
+### 1.3. Alterar Valor Mensal
+PUT {{host}}/api/clientes/{{clienteId}}/valor-mensal
+Content-Type: application/json
+Accept: application/json
+
+{
+  "novoValorMensal": 6000.00
+}
+
+### 1.4. Consultar Carteira (Custodia)
+GET {{host}}/api/clientes/{{clienteId}}/carteira
+Accept: application/json
+
+### 1.5. Consultar Rentabilidade Detalhada
+GET {{host}}/api/clientes/{{clienteId}}/rentabilidade
+Accept: application/json

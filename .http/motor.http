@@ -1,0 +1,10 @@
+@host = http://localhost:8080
+
+### 4.1. Executar Compra Manualmente (para testes)
+POST {{host}}/api/motor/executar-compra
+Content-Type: application/json
+Accept: application/json
+
+{
+  "dataReferencia": "2026-02-05"
+}
