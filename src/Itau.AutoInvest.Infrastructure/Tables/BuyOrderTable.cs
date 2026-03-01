@@ -30,9 +30,9 @@ public class BuyOrderTable
 
     [Required]
     [Column("TipoMercado")]
-    public MarketType MarketType;
+    public MarketType MarketType { get; set; }
     
     [Required]
     [Column("DataExecucao")]
-    public DateTime ExecutionDate;
+    public DateTime ExecutionDate { get; set; }
 }

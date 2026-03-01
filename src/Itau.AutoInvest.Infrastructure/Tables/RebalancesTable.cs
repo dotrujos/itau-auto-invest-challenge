@@ -19,7 +19,7 @@ public class RebalancesTable
 
     [Required]
     [Column("Tipo")]
-    public RebalanceType RebalanceType;
+    public RebalanceType RebalanceType { get; set; }
 
     [Required]
     [Column("TickerVendido")]
