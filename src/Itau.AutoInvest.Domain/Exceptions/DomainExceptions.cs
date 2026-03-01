@@ -44,6 +44,12 @@ public class BasketNotFoundException : BaseDomainException
         : base("Nenhuma cesta ativa encontrada.", "CESTA_NAO_ENCONTRADA") { }
 }
 
+public class MasterAccountNotFoundException : BaseDomainException
+{
+    public MasterAccountNotFoundException() 
+        : base("Conta Master nao encontrada no sistema.", "CONTA_MASTER_NAO_ENCONTRADA") { }
+}
+
 // Erros de Motor / Cotações
 public class EntityNotFoundException : BaseDomainException
 {
