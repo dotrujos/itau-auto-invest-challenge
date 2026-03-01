@@ -23,4 +23,9 @@ public interface IClientRepository
     /// Atualiza os dados de um cliente existente.
     /// </summary>
     Task UpdateAsync(Client client, CancellationToken ct);
+
+    /// <summary>
+    /// Busca todos os clientes ativos.
+    /// </summary>
+    Task<IEnumerable<Client>> GetAllActiveAsync(CancellationToken ct);
 }

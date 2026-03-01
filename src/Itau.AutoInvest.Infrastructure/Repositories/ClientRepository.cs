@@ -18,7 +18,6 @@ public class ClientRepository : IClientRepository
     public async Task<Client> AddAsync(Client client, CancellationToken ct)
     {
         var table = ClientMapper.ToPersistence(client);
-        
         _context.Clients.Add(table);
         await _context.SaveChangesAsync(ct);
         
@@ -46,8 +45,17 @@ public class ClientRepository : IClientRepository
     public async Task UpdateAsync(Client client, CancellationToken ct)
     {
         var table = ClientMapper.ToPersistence(client);
-        _context.Entry(table).State = EntityState.Modified;
-        
+        _context.Clients.Update(table);
         await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task<IEnumerable<Client>> GetAllActiveAsync(CancellationToken ct)
+    {
+        var tables = await _context.Clients
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .ToListAsync(ct);
+
+        return tables.Select(ClientMapper.ToDomain);
     }
 }
