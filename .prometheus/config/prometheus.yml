@@ -5,4 +5,4 @@ scrape_configs:
   - job_name: 'itau-autoinvest-api'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['itau.autoinvest.webapi:8080']
+      - targets: ['webapi:8080']
