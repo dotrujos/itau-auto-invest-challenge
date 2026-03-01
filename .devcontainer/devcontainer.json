@@ -1,0 +1,28 @@
+{
+  "name": "Itau AutoInvest - .NET 10 Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-azuretools.vscode-docker",
+        "humao.rest-client",
+        "confluentinc.vscode-confluent",
+        "cweijan.vscode-mysql-client2"
+      ],
+      "settings": {
+        "dotnet.dotnetPath": "/usr/share/dotnet",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        }
+      }
+    }
+  },
+  "remoteUser": "root",
+  "postCreateCommand": "dotnet restore && dotnet tool restore",
+  "forwardPorts": [5000, 5001, 5193, 3306, 9092, 29092]
+}
