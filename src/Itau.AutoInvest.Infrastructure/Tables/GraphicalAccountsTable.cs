@@ -24,7 +24,7 @@ public class GraphicalAccountsTable
 
     [Required]
     [Column("Tipo")]
-    public AccountType AccountType;
+    public AccountType AccountType { get; set; }
     
     [Required]
     [Column("DataCriacao")]
