@@ -1,4 +1,4 @@
-﻿using Itau.AutoInvest.Application.Abstractions;
+using Itau.AutoInvest.Application.Abstractions;
 using Itau.AutoInvest.Application.Jobs.CotahistIngestion;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.Implementations;
@@ -12,6 +12,8 @@ using Itau.AutoInvest.Application.UseCases.GetClientPortfolio;
 using Itau.AutoInvest.Application.UseCases.GetClientPortfolio.Implementations;
 using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability;
 using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability.Implementations;
+using Itau.AutoInvest.Application.UseCases.GetMasterCustody;
+using Itau.AutoInvest.Application.UseCases.GetMasterCustody.Implementations;
 using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment;
 using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment.Implementations;
 using Itau.AutoInvest.Application.UseCases.UpdateRecommendationBasket;
@@ -27,37 +29,37 @@ namespace Itau.AutoInvest.Infrastructure;
 
 public static class Extensions
 {
-    extension(IServiceCollection services)
+    public static IServiceCollection AddApplicationCoreLogic(this IServiceCollection services, IConfiguration configuration)
     {
-        public IServiceCollection AddApplicationCoreLogic(IConfiguration configuration)
-        {
-            string? connectionString = configuration["MySQL:ConnectionString"];
+        string? connectionString = configuration["MySQL:ConnectionString"];
 
-            if (connectionString != null)
-            {
-                services.AddDbContext<DatabaseContext>(options =>
-                    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-            }
-            
-            services.AddScoped<IFileExplorer, FileExplorer>();
-            services.AddScoped<IStockRepository, StockRepository>();
-            services.AddScoped<ICustodyRepository, CustodyRepository>();
-            services.AddScoped<IDistributionRepository, DistributionRepository>();
-            services.AddScoped<IBasketRepository, BasketRepository>();
-            services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
-            services.AddScoped<IClientRepository, ClientRepository>();
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
-            services.AddScoped<CustomerExit, CustomerExitImpl>();
-            services.AddScoped<UpdateMonthlyInvestment, UpdateMonthlyInvestmentImpl>();
-            services.AddScoped<GetClientPortfolio, GetClientPortfolioImpl>();
-            services.AddScoped<GetDetailedProfitability, GetDetailedProfitabilityImpl>();
-            services.AddScoped<UpdateRecommendationBasket, UpdateRecommendationBasketImpl>();
-            services.AddScoped<GetActiveBasket, GetActiveBasketImpl>();
-            services.AddScoped<GetBasketHistory, GetBasketHistoryImpl>();
-            services.AddHostedService<CotahistIngestionJob>();      
-            
-            return services;
+        if (connectionString != null)
+        {
+            services.AddDbContext<DatabaseContext>(options =>
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
         }
+        
+        services.AddScoped<IFileExplorer, FileExplorer>();
+        services.AddScoped<IStockRepository, StockRepository>();
+        services.AddScoped<ICustodyRepository, CustodyRepository>();
+        services.AddScoped<IDistributionRepository, DistributionRepository>();
+        services.AddScoped<IBasketRepository, BasketRepository>();
+        services.AddScoped<IGraphicalAccountRepository, GraphicalAccountRepository>();
+        services.AddScoped<IClientRepository, ClientRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        services.AddScoped<CustomerAdoption, CustomerAdoptionImpl>();
+        services.AddScoped<CustomerExit, CustomerExitImpl>();
+        services.AddScoped<UpdateMonthlyInvestment, UpdateMonthlyInvestmentImpl>();
+        services.AddScoped<GetClientPortfolio, GetClientPortfolioImpl>();
+        services.AddScoped<GetDetailedProfitability, GetDetailedProfitabilityImpl>();
+        services.AddScoped<UpdateRecommendationBasket, UpdateRecommendationBasketImpl>();
+        services.AddScoped<GetActiveBasket, GetActiveBasketImpl>();
+        services.AddScoped<GetBasketHistory, GetBasketHistoryImpl>();
+        services.AddScoped<GetMasterCustody, GetMasterCustodyImpl>();
+        
+        services.AddHostedService<CotahistIngestionJob>();      
+        
+        return services;
     }
 }

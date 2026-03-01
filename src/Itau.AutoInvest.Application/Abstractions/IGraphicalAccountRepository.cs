@@ -13,4 +13,9 @@ public interface IGraphicalAccountRepository
     /// Buscar uma conta grafica por um ‘id’ do cliente.
     /// </summary>
     Task<GraphicalAccount?> GetByClientIdAsync(long clientId, CancellationToken ct);
+
+    /// <summary>
+    /// Buscar a conta grafica Master do sistema.
+    /// </summary>
+    Task<GraphicalAccount?> GetMasterAccountAsync(CancellationToken ct);
 }

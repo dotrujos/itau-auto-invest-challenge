@@ -1,5 +1,6 @@
 using Itau.AutoInvest.Application.Abstractions;
 using Itau.AutoInvest.Domain.Entities;
+using Itau.AutoInvest.Domain.Enums;
 using Itau.AutoInvest.Infrastructure.Context;
 using Itau.AutoInvest.Infrastructure.Mappers;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,15 @@ public class GraphicalAccountRepository : IGraphicalAccountRepository
         var table = await _context.GraphicalAccounts
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.ClientId == clientId, ct);
+            
+        return table != null ? GraphicalAccountMapper.ToDomain(table) : null;
+    }
+
+    public async Task<GraphicalAccount?> GetMasterAccountAsync(CancellationToken ct)
+    {
+        var table = await _context.GraphicalAccounts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.AccountType == AccountType.Master, ct);
             
         return table != null ? GraphicalAccountMapper.ToDomain(table) : null;
     }
