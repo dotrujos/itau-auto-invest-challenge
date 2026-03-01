@@ -21,6 +21,7 @@ public class GetMasterCustodyController : ControllerBase
     [EndpointDescription("Consulta os resíduos de ativos que ficaram na conta master após a distribuição fracionária.")]
     [ProducesResponseType(typeof(GetMasterCustodyOutput), 200)]
     [ProducesResponseType(typeof(ProblemDetails), 404)]
+    [ProducesResponseType(typeof(ProblemDetails), 500)]
     public async Task<IActionResult> GetMasterCustody(CancellationToken ct)
     {
         var output = await _getMasterCustody.ExecuteAsync(ct);
