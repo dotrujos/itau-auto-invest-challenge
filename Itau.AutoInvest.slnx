@@ -1,5 +1,14 @@
 <Solution>
-  <Folder Name="/docs.challenge/" />
+  <Folder Name="/docs.challenge/">
+    <File Path="docs\challenge\desafio-tecnico-compra-programada.md" />
+    <File Path="docs\challenge\diagrama-er-compra-programada.drawio" />
+    <File Path="docs\challenge\diagrama-negocios-compra-programada.drawio" />
+    <File Path="docs\challenge\diagrama-sequencia-compra-programada.drawio" />
+    <File Path="docs\challenge\exemplos-contratos-api.md" />
+    <File Path="docs\challenge\glossario-compra-programada.md" />
+    <File Path="docs\challenge\layout-cotahist-b3.md" />
+    <File Path="docs\challenge\regras-negocio-detalhadas.md" />
+  </Folder>
   <Folder Name="/docs.project/" />
   <Folder Name="/root/">
     <File Path="compose.yaml" />
