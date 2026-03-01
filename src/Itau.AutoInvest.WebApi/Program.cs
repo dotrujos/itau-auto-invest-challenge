@@ -13,6 +13,7 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 var lokiHttpUrl = builder.Configuration["Loki:ConnectionString"] ??
                   throw new ArgumentException("Loki:ConnectionString is null");
 Log.Logger = new LoggerConfiguration()
+    .Enrich.WithProperty("job", "itau-autoinvest-api")
     .WriteTo.Console()
     .WriteTo.LokiHttp(lokiHttpUrl)
     .CreateLogger();
