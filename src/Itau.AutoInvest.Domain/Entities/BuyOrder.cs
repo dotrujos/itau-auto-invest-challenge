@@ -33,6 +33,12 @@ public class BuyOrder
         MarketType = marketType;
         ExecutionDate = DateTime.UtcNow;
     }
+
+    public BuyOrder(long masterAccountId, string ticker, int quantity, decimal unitPrice, MarketType marketType, DateTime executionDate)
+        : this(masterAccountId, ticker, quantity, unitPrice, marketType)
+    {
+        ExecutionDate = executionDate;
+    }
     
     public BuyOrder(long id, long masterAccountId, string ticker, int quantity, decimal unitPrice, MarketType marketType, DateTime executionDate)
     {
