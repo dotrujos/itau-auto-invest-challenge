@@ -1,25 +1,24 @@
-﻿**/.dockerignore
+# Pastas de compilação e pacotes
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+
+# Arquivos de configuração sensíveis ou de ambiente local (Segurança)
+**/appsettings.*.json
 **/.env
-**/.git
-**/.gitignore
-**/.project
-**/.settings
-**/.toolstarget
-**/.vs
-**/.vscode
-**/.idea
-**/*.*proj.user
-**/*.dbmdl
-**/*.jfm
-**/azds.yaml
-**/bin
-**/charts
-**/docker-compose*
+**/secrets.json
+
+# Git e Docker
+.git/
+.gitignore
+.dockerignore
+docker-compose*
 **/Dockerfile*
-**/node_modules
-**/npm-debug.log
-**/obj
-**/secrets.dev.yaml
-**/values.dev.yaml
-LICENSE
-README.md
+compose.yaml
+
+# Logs e arquivos temporários
+*.log
+**/TestResults/
+/cotacoes/*.TXT
