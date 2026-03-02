@@ -47,6 +47,13 @@ public class BasketRepository : IBasketRepository
     public async Task UpdateAsync(RecommendationBasket basket, CancellationToken ct)
     {
         var table = RecommendationBasketMapper.ToPersistence(basket);
+        
+        var tracked = _context.BasketRecommendation.Local.FirstOrDefault(x => x.Id == table.Id);
+        if (tracked != null)
+        {
+            _context.Entry(tracked).State = EntityState.Detached;
+        }
+
         _context.Entry(table).State = EntityState.Modified;
         await _context.SaveChangesAsync(ct);
     }
