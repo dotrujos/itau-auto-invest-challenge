@@ -25,7 +25,6 @@ public class StockRepository : IStockRepository
     public async Task<StockQuote?> GetLatestQuoteAsync(string ticker, CancellationToken ct)
     {
         var table = await _context.Currencies
-            .AsNoTracking()
             .Where(x => x.Ticker == ticker)
             .OrderByDescending(x => x.PreachDate)
             .FirstOrDefaultAsync(ct);

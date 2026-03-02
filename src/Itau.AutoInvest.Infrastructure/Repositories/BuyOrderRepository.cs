@@ -18,7 +18,7 @@ public class BuyOrderRepository : IBuyOrderRepository
     public async Task AddAsync(BuyOrder order, CancellationToken ct)
     {
         var table = BuyOrderMapper.ToPersistence(order);
-        _context.BuyOrder.Add(table);
+        await _context.BuyOrder.AddAsync(table, ct);
         await _context.SaveChangesAsync(ct);
     }
 

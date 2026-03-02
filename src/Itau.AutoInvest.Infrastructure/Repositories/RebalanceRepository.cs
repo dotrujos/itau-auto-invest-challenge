@@ -18,14 +18,13 @@ public class RebalanceRepository : IRebalanceRepository
     public async Task AddAsync(Rebalance rebalance, CancellationToken ct)
     {
         var table = RebalanceMapper.ToPersistence(rebalance);
-        _context.Rebalances.Add(table);
+        await _context.Rebalances.AddAsync(table, ct);
         await _context.SaveChangesAsync(ct);
     }
 
     public async Task<decimal> GetTotalSalesInMonthAsync(long clientId, int month, int year, CancellationToken ct)
     {
         return await _context.Rebalances
-            .AsNoTracking()
             .Where(x => x.ClientId == clientId && x.DateRebalancing.Month == month && x.DateRebalancing.Year == year)
             .SumAsync(x => x.SalesValue, ct);
     }

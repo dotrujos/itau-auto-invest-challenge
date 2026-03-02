@@ -18,13 +18,20 @@ public class IREventRepository : IIREventRepository
     public async Task AddAsync(IREvent irEvent, CancellationToken ct)
     {
         var table = IREventMapper.ToPersistence(irEvent);
-        _context.IREvents.Add(table);
+        await _context.IREvents.AddAsync(table, ct);
         await _context.SaveChangesAsync(ct);
     }
 
     public async Task UpdateAsync(IREvent irEvent, CancellationToken ct)
     {
         var table = IREventMapper.ToPersistence(irEvent);
+        
+        var tracked = _context.IREvents.Local.FirstOrDefault(x => x.Id == table.Id);
+        if (tracked != null)
+        {
+            _context.Entry(tracked).State = EntityState.Detached;
+        }
+
         _context.IREvents.Update(table);
         await _context.SaveChangesAsync(ct);
     }

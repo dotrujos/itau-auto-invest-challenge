@@ -18,7 +18,7 @@ public class ClientRepository : IClientRepository
     public async Task<Client> AddAsync(Client client, CancellationToken ct)
     {
         var table = ClientMapper.ToPersistence(client);
-        _context.Clients.Add(table);
+        await _context.Clients.AddAsync(table, ct);
         await _context.SaveChangesAsync(ct);
         
         return ClientMapper.ToDomain(table);
@@ -27,7 +27,6 @@ public class ClientRepository : IClientRepository
     public async Task<Client?> GetByIdAsync(long id, CancellationToken ct)
     {
         var table = await _context.Clients
-            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, ct);
             
         return table != null ? ClientMapper.ToDomain(table) : null;
@@ -36,7 +35,6 @@ public class ClientRepository : IClientRepository
     public async Task<Client?> GetByCpfAsync(string cpf, CancellationToken ct)
     {
         var table = await _context.Clients
-            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Cpf == cpf, ct);
             
         return table != null ? ClientMapper.ToDomain(table) : null;
@@ -59,7 +57,6 @@ public class ClientRepository : IClientRepository
     public async Task<IEnumerable<Client>> GetAllActiveAsync(CancellationToken ct)
     {
         var tables = await _context.Clients
-            .AsNoTracking()
             .Where(x => x.IsActive)
             .ToListAsync(ct);
 

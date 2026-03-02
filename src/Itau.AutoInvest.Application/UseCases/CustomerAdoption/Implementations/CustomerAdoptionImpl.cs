@@ -48,6 +48,7 @@ public class CustomerAdoptionImpl : CustomerAdoption
                 input.MensalValue);
 
             client = await _clientRepository.AddAsync(client, ct); 
+            await _unitOfWork.SaveChangesAsync(ct);
 
             var graphicalAccount = new GraphicalAccount(
                 client.Id,

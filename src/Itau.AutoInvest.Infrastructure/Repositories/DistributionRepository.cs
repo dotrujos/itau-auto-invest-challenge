@@ -17,10 +17,7 @@ public class DistributionRepository : IDistributionRepository
 
     public async Task<IEnumerable<Distribution>> GetByAccountIdAsync(long accountId, CancellationToken ct)
     {
-        // Busca distribuições através do Join com a tabela de Custódia, 
-        // filtrando pelo Id da Conta Gráfica
         var tables = await _context.Distributions
-            .AsNoTracking()
             .Include(d => d.Custody)
             .Where(d => d.Custody.GraphicalAccountId == accountId)
             .OrderBy(d => d.DistributionDate)
@@ -32,7 +29,7 @@ public class DistributionRepository : IDistributionRepository
     public async Task AddAsync(Distribution distribution, CancellationToken ct)
     {
         var table = DistributionMapper.ToPersistence(distribution);
-        _context.Distributions.Add(table);
+        await _context.Distributions.AddAsync(table, ct);
         await _context.SaveChangesAsync(ct);
     }
 }

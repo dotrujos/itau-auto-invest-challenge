@@ -18,7 +18,6 @@ public class CustodyRepository : ICustodyRepository
     public async Task<IEnumerable<Custody>> GetByAccountIdAsync(long accountId, CancellationToken ct)
     {
         var tables = await _context.Custodies
-            .AsNoTracking()
             .Where(x => x.GraphicalAccountId == accountId)
             .ToListAsync(ct);
             
@@ -28,7 +27,6 @@ public class CustodyRepository : ICustodyRepository
     public async Task<Custody?> GetByTickerAsync(long accountId, string ticker, CancellationToken ct)
     {
         var table = await _context.Custodies
-            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.GraphicalAccountId == accountId && x.Ticker == ticker, ct);
             
         return table != null ? CustodyMapper.ToDomain(table) : null;
@@ -37,14 +35,21 @@ public class CustodyRepository : ICustodyRepository
     public async Task AddAsync(Custody custody, CancellationToken ct)
     {
         var table = CustodyMapper.ToPersistence(custody);
-        _context.Custodies.Add(table);
+        await _context.Custodies.AddAsync(table, ct);
         await _context.SaveChangesAsync(ct);
     }
 
     public async Task UpdateAsync(Custody custody, CancellationToken ct)
     {
         var table = CustodyMapper.ToPersistence(custody);
-        _context.Entry(table).State = EntityState.Modified;
+        
+        var tracked = _context.Custodies.Local.FirstOrDefault(x => x.Id == table.Id);
+        if (tracked != null)
+        {
+            _context.Entry(tracked).State = EntityState.Detached;
+        }
+
+        _context.Custodies.Update(table);
         await _context.SaveChangesAsync(ct);
     }
 }

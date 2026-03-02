@@ -21,15 +21,16 @@ public class GraphicalAccountRepository : IGraphicalAccountRepository
         var table = GraphicalAccountMapper.ToPersistence(account);
         
         table.AccountNumber = Guid.NewGuid().ToString().Substring(0, 19);
-        _context.GraphicalAccounts.Add(table);
+        await _context.GraphicalAccounts.AddAsync(table, ct);
         
+        // Necessário salvar para gerar o ID se for auto-incremento
         await _context.SaveChangesAsync(ct);
         
         var domain = GraphicalAccountMapper.ToDomain(table);
         domain.GenerateAccountNumber();
         
         table.AccountNumber = domain.AccountNumber;
-        await _context.SaveChangesAsync(ct);
+        // Não chamamos SaveChangesAsync aqui para deixar o UnitOfWork gerenciar o commit final
         
         return domain;
     }
@@ -37,7 +38,6 @@ public class GraphicalAccountRepository : IGraphicalAccountRepository
     public async Task<GraphicalAccount?> GetByClientIdAsync(long clientId, CancellationToken ct)
     {
         var table = await _context.GraphicalAccounts
-            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.ClientId == clientId, ct);
             
         return table != null ? GraphicalAccountMapper.ToDomain(table) : null;
@@ -46,7 +46,6 @@ public class GraphicalAccountRepository : IGraphicalAccountRepository
     public async Task<GraphicalAccount?> GetMasterAccountAsync(CancellationToken ct)
     {
         var table = await _context.GraphicalAccounts
-            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.AccountType == AccountType.Master, ct);
             
         return table != null ? GraphicalAccountMapper.ToDomain(table) : null;

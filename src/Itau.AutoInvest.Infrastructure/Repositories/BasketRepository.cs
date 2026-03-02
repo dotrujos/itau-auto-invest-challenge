@@ -19,7 +19,6 @@ public class BasketRepository : IBasketRepository
     {
         var table = await _context.BasketRecommendation
             .Include(b => b.Items)
-            .AsNoTracking()
             .FirstOrDefaultAsync(b => b.IsActive, ct);
 
         if (table == null) return null;
@@ -54,7 +53,7 @@ public class BasketRepository : IBasketRepository
             _context.Entry(tracked).State = EntityState.Detached;
         }
 
-        _context.Entry(table).State = EntityState.Modified;
+        _context.BasketRecommendation.Update(table);
         await _context.SaveChangesAsync(ct);
     }
 
@@ -62,7 +61,6 @@ public class BasketRepository : IBasketRepository
     {
         var tables = await _context.BasketRecommendation
             .Include(b => b.Items)
-            .AsNoTracking()
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync(ct);
 
