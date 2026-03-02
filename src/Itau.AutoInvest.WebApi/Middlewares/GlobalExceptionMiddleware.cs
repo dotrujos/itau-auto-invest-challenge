@@ -49,6 +49,8 @@ public class GlobalExceptionMiddleware
             ClientNotFoundException => (int)HttpStatusCode.NotFound,
             BasketNotFoundException => (int)HttpStatusCode.NotFound,
             QuoteNotFoundException => (int)HttpStatusCode.NotFound,
+            MasterAccountNotFoundException => (int)HttpStatusCode.NotFound,
+            EntityNotFoundException => (int)HttpStatusCode.NotFound,
             
             PurchaseAlreadyExecutedException => (int)HttpStatusCode.Conflict,
             
