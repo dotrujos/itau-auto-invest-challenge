@@ -45,6 +45,13 @@ public class ClientRepository : IClientRepository
     public async Task UpdateAsync(Client client, CancellationToken ct)
     {
         var table = ClientMapper.ToPersistence(client);
+        
+        var tracked = _context.Clients.Local.FirstOrDefault(x => x.Id == table.Id);
+        if (tracked != null)
+        {
+            _context.Entry(tracked).State = EntityState.Detached;
+        }
+
         _context.Clients.Update(table);
         await _context.SaveChangesAsync(ct);
     }

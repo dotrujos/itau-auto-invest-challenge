@@ -64,4 +64,22 @@ public class ClientRepositoryTests
         // Assert
         Assert.Null(result);
     }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUpdateClientInDatabase()
+    {
+        // Arrange
+        var client = new Client("Joao da Silva", "03050980800", "joao.silva@email.com", 3000.00m);
+        var addedClient = await _repository.AddAsync(client, CancellationToken.None);
+        
+        addedClient.Deactivate();
+
+        // Act
+        await _repository.UpdateAsync(addedClient, CancellationToken.None);
+
+        // Assert
+        var updatedClient = await _context.Clients.FindAsync(addedClient.Id);
+        Assert.NotNull(updatedClient);
+        Assert.False(updatedClient.IsActive);
+    }
 }
