@@ -70,8 +70,7 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
 
                 var custody = await _custodyRepository.GetByAccountIdAsync(account.Id, ct);
                 if (!custody.Any()) continue;
-
-                // 1. Calcular Valor Total da Carteira
+                
                 decimal totalPortfolioValue = 0;
                 var currentQuotes = new Dictionary<string, decimal>();
 
@@ -84,8 +83,7 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
                 }
 
                 if (totalPortfolioValue == 0) continue;
-
-                // 2. Avaliar Desvios
+                
                 bool needsRebalancing = false;
                 decimal cashToReinvest = 0;
                 decimal totalSalesRebalanceamento = 0;
@@ -110,7 +108,6 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
 
                     if (deviation > limitThreshold)
                     {
-                        // Sobre-alocado: Vender excesso
                         int targetQty = (int)(targetValue / currentPrice);
                         int qtyToSell = currentQty - targetQty;
 
@@ -130,12 +127,10 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
                     }
                     else if (deviation < -limitThreshold || (currentPercentage < targetPercentage && currentQty == 0))
                     {
-                        // Sub-alocado: Marcar para compra
                         underAllocatedAssets.Add((basketItem.Ticker, targetValue, currentValue, currentPrice));
                     }
                 }
-
-                // 3. Regras Fiscais de Venda
+                
                 if (totalSalesRebalanceamento > 0)
                 {
                     decimal totalVendasNoMesAnterior = await _rebalanceRepository.GetTotalSalesInMonthAsync(client.Id, now.Month, now.Year, ct);
@@ -145,8 +140,7 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
                         await ProcessIRVendaAsync(client, totalSalesRebalanceamento, lucroTotalRebalanceamento, now, ct);
                     }
                 }
-
-                // 4. Reinvestir caixa nos sub-alocados
+                
                 if (cashToReinvest > 0 && underAllocatedAssets.Any())
                 {
                     decimal totalMissingValue = underAllocatedAssets.Sum(x => Math.Max(0, x.TargetValue - x.CurrentValue));
@@ -165,6 +159,7 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
                         {
                             var cItem = custody.FirstOrDefault(c => c.Ticker == ua.Ticker);
                             await ExecuteBuy(client.Id, account.Id, cItem, ua.Ticker, qtyToBuy, ua.CurrentPrice, ct);
+                            await ProcessIRDedoDuroAsync(client, ua.Ticker, qtyToBuy, ua.CurrentPrice, ct);
                             cashToReinvest -= qtyToBuy * ua.CurrentPrice;
                         }
                     }
@@ -174,7 +169,7 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
                 {
                     clientsRebalanced++;
                     totalGlobalSales += totalSalesRebalanceamento;
-                    totalGlobalInvested += cashToReinvest; // Sobras de caixa se houver, ou valor que foi realocado
+                    totalGlobalInvested += (totalSalesRebalanceamento - cashToReinvest); 
                 }
             }
 
@@ -184,7 +179,7 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
                 DateTime.UtcNow,
                 clientsRebalanced,
                 totalGlobalSales,
-                totalGlobalSales - totalGlobalInvested, // Valor total investido é vendas menos sobras
+                totalGlobalInvested,
                 $"Rebalanceamento por desvio executado. {clientsRebalanced} clientes rebalanceados."
             );
         }
@@ -221,6 +216,36 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
         }
     }
 
+    private async Task ProcessIRDedoDuroAsync(Client client, string ticker, int quantity, decimal price, CancellationToken ct)
+    {
+        decimal valorOperacao = quantity * price;
+        decimal irValue = valorOperacao * 0.00005m;
+
+        var kafkaMessage = new
+        {
+            tipo = "IR_DEDO_DURO",
+            clienteId = client.Id,
+            cpf = client.Cpf.Number,
+            ticker = ticker,
+            tipoOperacao = "COMPRA",
+            quantidade = quantity,
+            precoUnitario = price,
+            valorOperacao = valorOperacao,
+            aliquota = 0.00005,
+            valorIR = irValue,
+            dataOperacao = DateTime.UtcNow
+        };
+
+        try
+        {
+            await _kafkaProducer.PublishAsync("ir-dedo-duro", client.Id.ToString(), kafkaMessage, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Falha ao publicar IR Dedo-Duro no Kafka para o cliente {ClientId}.", client.Id);
+        }
+    }
+
     private async Task ProcessIRVendaAsync(Client client, decimal totalVendas, decimal lucroTotal, DateTime now, CancellationToken ct)
     {
         decimal irValue = lucroTotal * 0.20m;
@@ -229,12 +254,15 @@ public class ExecuteProportionRebalanceImpl : ExecuteProportionRebalance
         
         var kafkaMessage = new
         {
-            ClienteId = client.Id,
-            CPF = client.Cpf.Number,
-            TipoEvento = "IR_VENDA_REBALANCEAMENTO_DESVIO",
-            ValorOperacao = totalVendas,
-            ValorIR = irValue,
-            Data = now
+            tipo = "IR_VENDA",
+            clienteId = client.Id,
+            cpf = client.Cpf.Number,
+            mesReferencia = now.ToString("yyyy-MM"),
+            totalVendasMes = totalVendas,
+            lucroLiquido = lucroTotal,
+            aliquota = 0.20,
+            valorIR = irValue,
+            dataCalculo = now
         };
 
         try

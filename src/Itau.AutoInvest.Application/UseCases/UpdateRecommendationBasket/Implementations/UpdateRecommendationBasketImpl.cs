@@ -124,7 +124,7 @@ public class UpdateRecommendationBasketImpl : UpdateRecommendationBasket
             var account = await _accountRepository.GetByClientIdAsync(client.Id, ct);
             if (account == null) continue;
 
-            var clientCustody = await _custodyRepository.GetByAccountIdAsync(account.Id, ct);
+            var clientCustody = (await _custodyRepository.GetByAccountIdAsync(account.Id, ct)).ToList();
             if (!clientCustody.Any()) continue;
             
             decimal totalPortfolioValue = 0;
@@ -136,6 +136,15 @@ public class UpdateRecommendationBasketImpl : UpdateRecommendationBasket
                 decimal price = quote?.ClosingPrice ?? custody.AveragePrice;
                 currentQuotes[custody.Ticker] = price;
                 totalPortfolioValue += custody.Quantity * price;
+            }
+
+            foreach (var item in newBasket.Items)
+            {
+                if (!currentQuotes.ContainsKey(item.Ticker))
+                {
+                    var quote = await _stockRepository.GetLatestQuoteAsync(item.Ticker, ct);
+                    if (quote != null) currentQuotes[item.Ticker] = quote.ClosingPrice;
+                }
             }
 
             decimal totalVendasNoMesAnterior = await _rebalanceRepository.GetTotalSalesInMonthAsync(client.Id, now.Month, now.Year, ct);
@@ -165,7 +174,9 @@ public class UpdateRecommendationBasketImpl : UpdateRecommendationBasket
 
                 var newItem = newBasket.Items.First(i => i.Ticker == ticker);
                 decimal targetValue = totalPortfolioValue * (newItem.Percentage / 100m);
-                decimal currentPrice = currentQuotes[ticker];
+                decimal currentPrice = currentQuotes.ContainsKey(ticker) ? currentQuotes[ticker] : 0;
+                if (currentPrice == 0) continue;
+
                 int targetQuantity = (int)(targetValue / currentPrice);
 
                 if (custody.Quantity > targetQuantity)
@@ -179,6 +190,46 @@ public class UpdateRecommendationBasketImpl : UpdateRecommendationBasket
 
                     totalVendasRebalanceamento += salesValue;
                     lucroTotalRebalanceamento += profit;
+                }
+            }
+            
+            if (totalVendasRebalanceamento > 0)
+            {
+                var underAllocatedAssets = new List<(string Ticker, decimal TargetValue, decimal CurrentValue, decimal CurrentPrice)>();
+                foreach (var basketItem in newBasket.Items)
+                {
+                    decimal currentPrice = currentQuotes.ContainsKey(basketItem.Ticker) ? currentQuotes[basketItem.Ticker] : 0;
+                    if (currentPrice == 0) continue;
+
+                    var custodyItem = clientCustody.FirstOrDefault(c => c.Ticker == basketItem.Ticker);
+                    decimal targetValue = totalPortfolioValue * (basketItem.Percentage / 100m);
+                    decimal currentValue = (custodyItem?.Quantity ?? 0) * currentPrice;
+
+                    if (targetValue > currentValue)
+                    {
+                        underAllocatedAssets.Add((basketItem.Ticker, targetValue, currentValue, currentPrice));
+                    }
+                }
+
+                if (underAllocatedAssets.Any())
+                {
+                    decimal totalMissingValue = underAllocatedAssets.Sum(x => x.TargetValue - x.CurrentValue);
+                    decimal cashToReinvest = totalVendasRebalanceamento;
+
+                    foreach (var ua in underAllocatedAssets)
+                    {
+                        decimal missingValue = ua.TargetValue - ua.CurrentValue;
+                        decimal proportion = totalMissingValue > 0 ? (missingValue / totalMissingValue) : 0;
+                        decimal cashForAsset = cashToReinvest * proportion;
+                        int qtyToBuy = (int)(cashForAsset / ua.CurrentPrice);
+
+                        if (qtyToBuy > 0)
+                        {
+                            var cItem = clientCustody.FirstOrDefault(c => c.Ticker == ua.Ticker);
+                            await ExecuteRebalanceBuy(client.Id, account.Id, cItem, ua.Ticker, qtyToBuy, ua.CurrentPrice, ct);
+                            await ProcessIRDedoDuroAsync(client, ua.Ticker, qtyToBuy, ua.CurrentPrice, ct);
+                        }
+                    }
                 }
             }
             
@@ -198,6 +249,52 @@ public class UpdateRecommendationBasketImpl : UpdateRecommendationBasket
         await _custodyRepository.UpdateAsync(custody, ct);
     }
 
+    private async Task ExecuteRebalanceBuy(long clientId, long accountId, Custody? custody, string ticker, int quantity, decimal price, CancellationToken ct)
+    {
+        var rebalance = new Rebalance(clientId, RebalanceType.Mudanca_Cesta, "CASH_PENDING", ticker, quantity * price);
+        await _rebalanceRepository.AddAsync(rebalance, ct);
+
+        if (custody == null)
+        {
+            await _custodyRepository.AddAsync(new Custody(accountId, ticker, quantity, price), ct);
+        }
+        else
+        {
+            custody.AddToPosition(quantity, price);
+            await _custodyRepository.UpdateAsync(custody, ct);
+        }
+    }
+
+    private async Task ProcessIRDedoDuroAsync(Client client, string ticker, int quantity, decimal price, CancellationToken ct)
+    {
+        decimal valorOperacao = quantity * price;
+        decimal irValue = valorOperacao * 0.00005m;
+
+        var kafkaMessage = new
+        {
+            tipo = "IR_DEDO_DURO",
+            clienteId = client.Id,
+            cpf = client.Cpf.Number,
+            ticker = ticker,
+            tipoOperacao = "COMPRA",
+            quantidade = quantity,
+            precoUnitario = price,
+            valorOperacao = valorOperacao,
+            aliquota = 0.00005,
+            valorIR = irValue,
+            dataOperacao = DateTime.UtcNow
+        };
+
+        try
+        {
+            await _kafkaProducer.PublishAsync("ir-dedo-duro", client.Id.ToString(), kafkaMessage, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Falha ao publicar IR Dedo-Duro no Kafka para o cliente {ClientId}.", client.Id);
+        }
+    }
+
     private async Task ProcessIRVendaAsync(Client client, decimal totalVendas, decimal lucroTotal, DateTime now, CancellationToken ct)
     {
         decimal irValue = lucroTotal * 0.20m;
@@ -206,12 +303,15 @@ public class UpdateRecommendationBasketImpl : UpdateRecommendationBasket
         
         var kafkaMessage = new
         {
-            ClienteId = client.Id,
-            CPF = client.Cpf.Number,
-            TipoEvento = "IR_VENDA_REBALANCEAMENTO",
-            ValorOperacao = totalVendas,
-            ValorIR = irValue,
-            Data = now
+            tipo = "IR_VENDA",
+            clienteId = client.Id,
+            cpf = client.Cpf.Number,
+            mesReferencia = now.ToString("yyyy-MM"),
+            totalVendasMes = totalVendas,
+            lucroLiquido = lucroTotal,
+            aliquota = 0.20,
+            valorIR = irValue,
+            dataCalculo = now
         };
 
         try
