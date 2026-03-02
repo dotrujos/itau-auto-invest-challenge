@@ -74,6 +74,7 @@ services:
 
   webapi:
     image: itau.autoinvest.webapi
+    container_name: itau.autoinvest.webapi
     build:
       context: .
       dockerfile: src/Itau.AutoInvest.WebApi/Dockerfile
