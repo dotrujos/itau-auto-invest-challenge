@@ -25,7 +25,7 @@ public class CustomerAdoptionControllerTests : IClassFixture<IntegrationTestFixt
         var input = new CustomerAdoptionInput
         {
             Name = "Carlos Alberto",
-            Cpf = "11122233344",
+            Cpf = "03050980800",
             Email = "carlos@email.com",
             MensalValue = 1500.00m
         };
@@ -55,7 +55,7 @@ public class CustomerAdoptionControllerTests : IClassFixture<IntegrationTestFixt
         var input = new CustomerAdoptionInput
         {
             Name = "Invalido",
-            Cpf = "00000000000",
+            Cpf = "03050980800",
             Email = "invalido@email.com",
             MensalValue = 50.00m
         };
