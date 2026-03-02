@@ -24,6 +24,7 @@
       <ProjectReference Include="..\..\src\Itau.AutoInvest.Application\Itau.AutoInvest.Application.csproj" />
       <ProjectReference Include="..\..\src\Itau.AutoInvest.Domain\Itau.AutoInvest.Domain.csproj" />
       <ProjectReference Include="..\..\src\Itau.AutoInvest.Infrastructure\Itau.AutoInvest.Infrastructure.csproj" />
+      <ProjectReference Include="..\..\src\Itau.AutoInvest.WebApi\Itau.AutoInvest.WebApi.csproj" />
     </ItemGroup>
 
     <ItemGroup>
