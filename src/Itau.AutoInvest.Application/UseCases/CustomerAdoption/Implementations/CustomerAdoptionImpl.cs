@@ -1,5 +1,4 @@
 using Itau.AutoInvest.Application.Abstractions;
-using Itau.AutoInvest.Application.DTOs;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.IO;
 using Itau.AutoInvest.Domain.Entities;
 using Itau.AutoInvest.Domain.Enums;
@@ -69,13 +68,11 @@ public class CustomerAdoptionImpl : CustomerAdoption
                 Name = client.Name,
                 AdoptionDate = DateTime.UtcNow,
                 IsActive = client.IsActive,
-                GraphicalAccount = new GraphicalAccountDTO()
-                {
-                    Id = graphicalAccount.Id,
-                    AccountNumber = graphicalAccount.AccountNumber,
-                    AccountType = graphicalAccount.AccountType.ToString(),
-                    CreatedAt = graphicalAccount.CreatedAt
-                },
+                GraphicalAccount = new GraphicalAccountOutput(
+                    graphicalAccount.Id,
+                    graphicalAccount.AccountNumber,
+                    graphicalAccount.AccountType.ToString(),
+                    graphicalAccount.CreatedAt)
             };
         }
         catch (Exception ex)

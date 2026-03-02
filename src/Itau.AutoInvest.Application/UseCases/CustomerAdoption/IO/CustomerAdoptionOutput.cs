@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using Itau.AutoInvest.Application.DTOs;
 
 namespace Itau.AutoInvest.Application.UseCases.CustomerAdoption.IO;
 
@@ -25,5 +24,18 @@ public class CustomerAdoptionOutput
     public DateTime AdoptionDate { get; set; }
     
     [JsonPropertyName("contaGrafica")]
-    public GraphicalAccountDTO GraphicalAccount { get; set; }
+    public GraphicalAccountOutput GraphicalAccount { get; set; }
 }
+
+public record GraphicalAccountOutput(
+    long Id,
+    
+    [property: JsonPropertyName("numeroConta")]
+    string AccountNumber,
+    
+    [property: JsonPropertyName("tipo")]
+    string AccountType,
+    
+    [property: JsonPropertyName("dataCriacao")]
+    DateTime CreatedAt
+);
