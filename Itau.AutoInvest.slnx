@@ -23,6 +23,7 @@
   </Folder>
   <Folder Name="/root/">
     <File Path="compose.yaml" />
+    <File Path="LICENSE" />
     <File Path="Makefile" />
     <File Path="README.md" />
   </Folder>
