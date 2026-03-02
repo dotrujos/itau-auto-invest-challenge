@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/config/">
+    <File Path=".config\dotnet-tools.json" />
+  </Folder>
   <Folder Name="/docs.challenge/">
     <File Path="docs\challenge\desafio-tecnico-compra-programada.md" />
     <File Path="docs\challenge\diagrama-er-compra-programada.drawio" />
