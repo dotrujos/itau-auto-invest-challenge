@@ -77,9 +77,9 @@ public class UpdateRecommendationBasketImpl : UpdateRecommendationBasket
 
             await _basketRepository.AddAsync(newBasket, ct);
             
-            if (activeBasket != null && removedAssets.Any())
+            if (activeBasket != null)
             {
-                await ProcessRebalancingAsync(removedAssets, ct);
+                await ProcessRebalancingAsync(activeBasket, newBasket, ct);
             }
 
             await _unitOfWork.CommitAsync(ct);
@@ -110,69 +110,119 @@ public class UpdateRecommendationBasketImpl : UpdateRecommendationBasket
         }
     }
 
-    private async Task ProcessRebalancingAsync(List<string> removedAssets, CancellationToken ct)
+    private async Task ProcessRebalancingAsync(RecommendationBasket oldBasket, RecommendationBasket newBasket, CancellationToken ct)
     {
         var activeClients = await _clientRepository.GetAllActiveAsync(ct);
         var now = DateTime.UtcNow;
+        var oldTickers = oldBasket.Items.Select(i => i.Ticker).ToList();
+        var newTickers = newBasket.Items.Select(i => i.Ticker).ToList();
+        var removedAssets = oldTickers.Except(newTickers).ToList();
+        var remainedAssets = oldTickers.Intersect(newTickers).ToList();
         
         foreach (var client in activeClients)
         {
             var account = await _accountRepository.GetByClientIdAsync(client.Id, ct);
             if (account == null) continue;
 
+            var clientCustody = await _custodyRepository.GetByAccountIdAsync(account.Id, ct);
+            if (!clientCustody.Any()) continue;
+            
+            decimal totalPortfolioValue = 0;
+            var currentQuotes = new Dictionary<string, decimal>();
+
+            foreach (var custody in clientCustody)
+            {
+                var quote = await _stockRepository.GetLatestQuoteAsync(custody.Ticker, ct);
+                decimal price = quote?.ClosingPrice ?? custody.AveragePrice;
+                currentQuotes[custody.Ticker] = price;
+                totalPortfolioValue += custody.Quantity * price;
+            }
+
             decimal totalVendasNoMesAnterior = await _rebalanceRepository.GetTotalSalesInMonthAsync(client.Id, now.Month, now.Year, ct);
             decimal totalVendasRebalanceamento = 0;
             decimal lucroTotalRebalanceamento = 0;
-
+            
             foreach (var ticker in removedAssets)
             {
-                var custody = await _custodyRepository.GetByTickerAsync(account.Id, ticker, ct);
+                var custody = clientCustody.FirstOrDefault(c => c.Ticker == ticker);
                 if (custody == null || custody.Quantity <= 0) continue;
 
-                var quote = await _stockRepository.GetLatestQuoteAsync(ticker, ct);
-                decimal currentPrice = quote?.ClosingPrice ?? custody.AveragePrice;
-                decimal salesValue = custody.Quantity * currentPrice;
+                decimal price = currentQuotes.ContainsKey(ticker) ? currentQuotes[ticker] : custody.AveragePrice;
+                decimal salesValue = custody.Quantity * price;
                 decimal costValue = custody.Quantity * custody.AveragePrice;
                 decimal profit = salesValue - costValue;
                 
-                var rebalance = new Rebalance(client.Id, RebalanceType.Mudanca_Cesta, ticker, "CASH_PENDING", salesValue);
-                await _rebalanceRepository.AddAsync(rebalance, ct);
-
-                // Atualizar custódia (venda total do ativo removido)
-                custody.RemoveFromPosition(custody.Quantity);
-                await _custodyRepository.UpdateAsync(custody, ct);
+                await ExecuteRebalanceSale(client.Id, custody, ticker, custody.Quantity, price, ct);
 
                 totalVendasRebalanceamento += salesValue;
                 lucroTotalRebalanceamento += profit;
             }
             
-            if (totalVendasNoMesAnterior + totalVendasRebalanceamento > 20000 && lucroTotalRebalanceamento > 0)
+            foreach (var ticker in remainedAssets)
             {
-                decimal irValue = lucroTotalRebalanceamento * 0.20m;
-                var irEvent = new IREvent(client.Id, IREventType.IR_Venda, lucroTotalRebalanceamento, irValue);
-                await _irEventRepository.AddAsync(irEvent, ct);
-                
-                var kafkaMessage = new
-                {
-                    ClienteId = client.Id,
-                    CPF = client.Cpf.Number,
-                    TipoEvento = "IR_VENDA_REBALANCEAMENTO",
-                    ValorOperacao = totalVendasRebalanceamento,
-                    ValorIR = irValue,
-                    Data = now
-                };
+                var custody = clientCustody.FirstOrDefault(c => c.Ticker == ticker);
+                if (custody == null || custody.Quantity <= 0) continue;
 
-                try
+                var newItem = newBasket.Items.First(i => i.Ticker == ticker);
+                decimal targetValue = totalPortfolioValue * (newItem.Percentage / 100m);
+                decimal currentPrice = currentQuotes[ticker];
+                int targetQuantity = (int)(targetValue / currentPrice);
+
+                if (custody.Quantity > targetQuantity)
                 {
-                    await _kafkaProducer.PublishAsync("ir-venda", client.Id.ToString(), kafkaMessage, ct);
-                    irEvent.MarkAsPublished();
-                    await _irEventRepository.UpdateAsync(irEvent, ct);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Falha ao publicar IR de venda no Kafka para o cliente {ClientId}. O evento será mantido como não publicado para reprocessamento.", client.Id);
+                    int quantityToSell = custody.Quantity - targetQuantity;
+                    decimal salesValue = quantityToSell * currentPrice;
+                    decimal costValue = quantityToSell * custody.AveragePrice;
+                    decimal profit = salesValue - costValue;
+
+                    await ExecuteRebalanceSale(client.Id, custody, ticker, quantityToSell, currentPrice, ct);
+
+                    totalVendasRebalanceamento += salesValue;
+                    lucroTotalRebalanceamento += profit;
                 }
             }
+            
+            if (totalVendasNoMesAnterior + totalVendasRebalanceamento > 20000 && lucroTotalRebalanceamento > 0)
+            {
+                await ProcessIRVendaAsync(client, totalVendasRebalanceamento, lucroTotalRebalanceamento, now, ct);
+            }
+        }
+    }
+
+    private async Task ExecuteRebalanceSale(long clientId, Custody custody, string ticker, int quantity, decimal price, CancellationToken ct)
+    {
+        var rebalance = new Rebalance(clientId, RebalanceType.Mudanca_Cesta, ticker, "CASH_PENDING", quantity * price);
+        await _rebalanceRepository.AddAsync(rebalance, ct);
+
+        custody.RemoveFromPosition(quantity);
+        await _custodyRepository.UpdateAsync(custody, ct);
+    }
+
+    private async Task ProcessIRVendaAsync(Client client, decimal totalVendas, decimal lucroTotal, DateTime now, CancellationToken ct)
+    {
+        decimal irValue = lucroTotal * 0.20m;
+        var irEvent = new IREvent(client.Id, IREventType.IR_Venda, lucroTotal, irValue);
+        await _irEventRepository.AddAsync(irEvent, ct);
+        
+        var kafkaMessage = new
+        {
+            ClienteId = client.Id,
+            CPF = client.Cpf.Number,
+            TipoEvento = "IR_VENDA_REBALANCEAMENTO",
+            ValorOperacao = totalVendas,
+            ValorIR = irValue,
+            Data = now
+        };
+
+        try
+        {
+            await _kafkaProducer.PublishAsync("ir-venda", client.Id.ToString(), kafkaMessage, ct);
+            irEvent.MarkAsPublished();
+            await _irEventRepository.UpdateAsync(irEvent, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Falha ao publicar IR de venda no Kafka para o cliente {ClientId}.", client.Id);
         }
     }
 }
