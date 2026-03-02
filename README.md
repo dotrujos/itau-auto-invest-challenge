@@ -22,7 +22,7 @@ O sistema foi desenvolvido seguindo os princípios de Clean Architecture e Domai
 
 ## Pre-requisitos
 
-- .NET 9.0 SDK
+- .NET 10.0 SDK
 - Docker e Docker Compose
 - Ferramenta Make (opcional, mas recomendado para facilitar os comandos)
 
