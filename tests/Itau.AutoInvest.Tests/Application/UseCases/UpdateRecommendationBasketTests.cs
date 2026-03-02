@@ -113,8 +113,8 @@ public class UpdateRecommendationBasketTests
             .ReturnsAsync(account);
 
         var custody = new Custody(100, 10, "ABEV3", 100, 10.00m, DateTime.UtcNow);
-        _custodyRepoMock.Setup(r => r.GetByTickerAsync(10, "ABEV3", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(custody);
+        _custodyRepoMock.Setup(r => r.GetByAccountIdAsync(10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Custody> { custody });
 
         _stockRepoMock.Setup(r => r.GetLatestQuoteAsync("ABEV3", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new StockQuote(1, DateTime.UtcNow, "ABEV3", 15.00m, 16.00m, 17.00m, 14.00m));
@@ -163,7 +163,8 @@ public class UpdateRecommendationBasketTests
         // Sales = 1000 * 25 = 25000 (> 20000)
         // Profit = 25000 - (1000 * 20) = 5000 (> 0)
         var custody = new Custody(100, 10, "REMOVE", 1000, 20.00m, DateTime.UtcNow);
-        _custodyRepoMock.Setup(r => r.GetByTickerAsync(10, "REMOVE", It.IsAny<CancellationToken>())).ReturnsAsync(custody);
+        _custodyRepoMock.Setup(r => r.GetByAccountIdAsync(10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Custody> { custody });
         _stockRepoMock.Setup(r => r.GetLatestQuoteAsync("REMOVE", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new StockQuote(1, DateTime.UtcNow, "REMOVE", 25.00m, 25.00m, 26.00m, 24.00m));
 
