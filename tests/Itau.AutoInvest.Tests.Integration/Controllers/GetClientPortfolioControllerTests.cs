@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Itau.AutoInvest.Application.UseCases.GetClientPortfolio.IO;
+using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability.IO;
 using Itau.AutoInvest.Domain.Enums;
 using Itau.AutoInvest.Infrastructure.Context;
 using Itau.AutoInvest.Infrastructure.Tables;
@@ -96,5 +97,74 @@ public class GetClientPortfolioControllerTests : IClassFixture<IntegrationTestFi
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_Rentabilidade_Returns200_WhenDataExists()
+    {
+        // Arrange
+        using var scope = _fixture.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+            
+        // Clean up
+        context.Distributions.RemoveRange(context.Distributions);
+        context.Custodies.RemoveRange(context.Custodies);
+        context.GraphicalAccounts.RemoveRange(context.GraphicalAccounts);
+        context.Clients.RemoveRange(context.Clients);
+        await context.SaveChangesAsync();
+
+        var client = new ClientsTable
+        {
+            Name = "Joao Rentabilidade",
+            Cpf = "03050980800",
+            Email = "joao.rent@email.com",
+            MonthlyValue = 3000.00m,
+            IsActive = true,
+            AccessDate = DateTime.UtcNow
+        };
+        context.Clients.Add(client);
+        await context.SaveChangesAsync();
+
+        var account = new GraphicalAccountsTable
+        {
+            ClientId = client.Id,
+            AccountNumber = "FLH-999999",
+            AccountType = AccountType.Filhote,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.GraphicalAccounts.Add(account);
+        await context.SaveChangesAsync();
+
+        var custody = new CustodiesTable
+        {
+            GraphicalAccountId = account.Id,
+            Ticker = "ITUB4",
+            Quantity = 10,
+            AvaragePrice = 20.00m
+        };
+        context.Custodies.Add(custody);
+        await context.SaveChangesAsync();
+
+        var distribution = new DistributionsTable
+        {
+            BuyOrderId = 1,
+            CustodyId = custody.Id,
+            Ticker = "ITUB4",
+            Quantity = 10,
+            UnitPrice = 20.00m,
+            DistributionDate = DateTime.UtcNow
+        };
+        context.Distributions.Add(distribution);
+        await context.SaveChangesAsync();
+
+        // Act
+        var response = await _client.GetAsync($"/api/clientes/{client.Id}/rentabilidade");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var output = await response.Content.ReadFromJsonAsync<GetDetailedProfitabilityOutput>();
+        Assert.NotNull(output);
+        Assert.Equal(client.Id, output.ClientId);
+        Assert.NotEmpty(output.AportesHistory);
     }
 }
