@@ -32,6 +32,7 @@ public class CotahistIngestionJobIntegrationTests : IClassFixture<IntegrationTes
         var other = new string(' ', 13);
         var closing = "0000000003050";
         var line = $"01{date}  {ticker}{new string(' ', 32)}{opening}{max}{min}{other}{closing}";
+        line = line.PadRight(245);
 
         var fileName = "COTAHIST_D01032026.TXT";
         var filePath = Path.Combine(_testPath, fileName);
@@ -78,7 +79,7 @@ public class CotahistIngestionJobIntegrationTests : IClassFixture<IntegrationTes
         var jobTask = job.StartAsync(cts.Token);
         
         // Give it enough time to process
-        await Task.Delay(1000);
+        await Task.Delay(2000);
         
         cts.Cancel();
         await jobTask;
