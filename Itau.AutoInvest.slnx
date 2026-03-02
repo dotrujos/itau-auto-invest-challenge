@@ -16,6 +16,11 @@
   <Folder Name="/github/">
     <File Path=".github\workflows\ci.yml" />
   </Folder>
+  <Folder Name="/http/">
+    <File Path=".http\admin.http" />
+    <File Path=".http\clientes.http" />
+    <File Path=".http\motor.http" />
+  </Folder>
   <Folder Name="/root/">
     <File Path="compose.yaml" />
     <File Path="Makefile" />
