@@ -1,6 +1,7 @@
 using System;
 using Itau.AutoInvest.Application.Abstractions;
 using Itau.AutoInvest.Application.Jobs.CotahistIngestion;
+using Itau.AutoInvest.Application.Jobs.ProportionRebalance;
 using Itau.AutoInvest.Application.Jobs.PurchaseScheduler;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.Implementations;
@@ -8,6 +9,8 @@ using Itau.AutoInvest.Application.UseCases.CustomerExit;
 using Itau.AutoInvest.Application.UseCases.CustomerExit.Implementations;
 using Itau.AutoInvest.Application.UseCases.ExecuteManualPurchase;
 using Itau.AutoInvest.Application.UseCases.ExecuteManualPurchase.Implementations;
+using Itau.AutoInvest.Application.UseCases.ExecuteProportionRebalance;
+using Itau.AutoInvest.Application.UseCases.ExecuteProportionRebalance.Implementations;
 using Itau.AutoInvest.Application.UseCases.GetActiveBasket;
 using Itau.AutoInvest.Application.UseCases.GetActiveBasket.Implementations;
 using Itau.AutoInvest.Application.UseCases.GetBasketHistory;
@@ -66,9 +69,11 @@ public static class Extensions
         services.AddScoped<GetBasketHistory, GetBasketHistoryImpl>();
         services.AddScoped<GetMasterCustody, GetMasterCustodyImpl>();
         services.AddScoped<ExecuteManualPurchase, ExecuteManualPurchaseImpl>();
+        services.AddScoped<ExecuteProportionRebalance, ExecuteProportionRebalanceImpl>();
         
         services.AddHostedService<CotahistIngestionJob>();
-        services.AddHostedService<PurchaseSchedulerJob>();      
+        services.AddHostedService<PurchaseSchedulerJob>();
+        services.AddHostedService<ProportionRebalanceJob>();      
         
         return services;
     }
