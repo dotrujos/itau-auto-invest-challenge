@@ -120,7 +120,7 @@ public class BasketRepositoryTests
         var basket = new RecommendationBasket("Cesta para Atualizar", items);
         await _repository.AddAsync(basket, CancellationToken.None);
 
-        // Simula uma nova instância com mesmo ID (como ocorre no fluxo real de desativação)
+        // Simula uma nova instância com mesmo “ID” (como ocorre no fluxo real de desativação)
         var dbBasket = await _repository.GetActiveBasketAsync(CancellationToken.None);
         dbBasket!.Deactivate();
 
@@ -132,5 +132,24 @@ public class BasketRepositoryTests
         Assert.NotNull(updatedBasketInDb);
         Assert.False(updatedBasketInDb.IsActive);
         Assert.NotNull(updatedBasketInDb.DeactivationDate);
+    }
+
+    [Fact]
+    public async Task GetHistoryAsync_ShouldReturnAllBasketsOrderByDate()
+    {
+        // Arrange
+        var basket1 = new BasketRecommendationTable { Name = "Cesta 1", IsActive = false, CreatedAt = DateTime.UtcNow.AddDays(-2), Items = new List<BasketItemsTable>() };
+        var basket2 = new BasketRecommendationTable { Name = "Cesta 2", IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-1), Items = new List<BasketItemsTable>() };
+
+        _context.BasketRecommendation.AddRange(basket1, basket2);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = (await _repository.GetHistoryAsync(CancellationToken.None)).ToList();
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.Equal("Cesta 2", result[0].Name); // Newest first
+        Assert.Equal("Cesta 1", result[1].Name);
     }
 }
