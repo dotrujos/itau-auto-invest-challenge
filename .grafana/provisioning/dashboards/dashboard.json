@@ -489,12 +489,12 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "count_over_time({Level=\"error\"} [1m])",
+          "expr": "count_over_time({job=\"itau-autoinvest-api\", level=\"error\"} [1h])",
           "queryType": "instant",
           "refId": "A"
         }
       ],
-      "title": "Erros no Último Minuto (Logs)",
+      "title": "Erros no Última Hora (Logs)",
       "type": "stat"
     },
     {
@@ -776,6 +776,6 @@
   "timezone": "browser",
   "title": "Itau AutoInvest - Overview",
   "uid": "itau-overview",
-  "version": 8,
+  "version": 9,
   "weekStart": ""
 }
