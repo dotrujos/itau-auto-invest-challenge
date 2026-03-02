@@ -14,14 +14,10 @@ public class RequestIdMiddleware
     {
         var requestId = Guid.CreateVersion7().ToString();
         
-        context.Response.OnStarting(() =>
+        if (!context.Response.Headers.ContainsKey(RequestIdHeaderName))
         {
-            if (!context.Response.Headers.ContainsKey(RequestIdHeaderName))
-            {
-                context.Response.Headers.Append(RequestIdHeaderName, requestId);
-            }
-            return Task.CompletedTask;
-        });
+            context.Response.Headers.Append(RequestIdHeaderName, requestId);
+        }
         
         using var scope = context.RequestServices.GetRequiredService<ILogger<RequestIdMiddleware>>().BeginScope(new Dictionary<string, object>
         {
