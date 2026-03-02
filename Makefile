@@ -1,4 +1,4 @@
-.PHONY: build run test publish migration update-db clean docker-up docker-down help
+.PHONY: build prepare run test publish migration update-db clean docker-up docker-down help
 
 WEBAPI_PROJECT=src/Itau.AutoInvest.WebApi/Itau.AutoInvest.WebApi.csproj
 INFRA_PROJECT=src/Itau.AutoInvest.Infrastructure/Itau.AutoInvest.Infrastructure.csproj
@@ -8,6 +8,9 @@ all: build
 
 build:
 	dotnet build $(SOLUTION)
+
+prepare:
+	dotnet tool restore
 
 run:
 	dotnet run --project $(WEBAPI_PROJECT)
@@ -47,6 +50,7 @@ docker-down:
 help:
 	@echo "Comandos disponíveis:"
 	@echo "  make build          - Compila a solução completa"
+	@echo "  make prepare        - Instala as DotNet Tools necessarias"
 	@echo "  make run            - Executa o projeto WebApi"
 	@echo "  make test           - Executa todos os testes (Unitários e Integração)"
 	@echo "  make test-unit      - Executa apenas os testes unitários"
