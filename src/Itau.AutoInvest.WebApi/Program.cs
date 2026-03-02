@@ -27,6 +27,7 @@ builder.Services.AddOpenTelemetry()
         metrics.AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
+            .AddMeter("Microsoft.EntityFrameworkCore")
             .AddPrometheusExporter();
     });
 

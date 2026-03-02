@@ -6,3 +6,7 @@ scrape_configs:
     metrics_path: '/metrics'
     static_configs:
       - targets: ['webapi:8080']
+
+  - job_name: 'itau-autoinvest-db-exporter'
+    static_configs:
+      - targets: [ 'mysql-exporter:9104' ]

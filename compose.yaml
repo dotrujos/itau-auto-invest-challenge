@@ -15,6 +15,18 @@ services:
       interval: 5s
       timeout: 20s
       retries: 10
+      
+  mysql-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: itau.autoinvest.db.exporter
+    command:
+      - "--mysqld.address=mysql:3306"
+      - "--mysqld.username=root:minhasenha"
+    ports:
+      - "9104:9104"
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
