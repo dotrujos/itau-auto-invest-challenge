@@ -15,6 +15,7 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
     private readonly ICustodyRepository _custodyRepository;
     private readonly IStockRepository _stockRepository;
     private readonly IBuyOrderRepository _buyOrderRepository;
+    private readonly IDistributionRepository _distributionRepository;
     private readonly IKafkaProducer _kafkaProducer;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<ExecuteManualPurchaseImpl> _logger;
@@ -26,6 +27,7 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
         ICustodyRepository custodyRepository,
         IStockRepository stockRepository,
         IBuyOrderRepository buyOrderRepository,
+        IDistributionRepository distributionRepository,
         IKafkaProducer kafkaProducer,
         IUnitOfWork unitOfWork,
         ILogger<ExecuteManualPurchaseImpl> logger)
@@ -36,6 +38,7 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
         _custodyRepository = custodyRepository;
         _stockRepository = stockRepository;
         _buyOrderRepository = buyOrderRepository;
+        _distributionRepository = distributionRepository;
         _kafkaProducer = kafkaProducer;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -43,7 +46,6 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
 
     protected override async Task<ExecuteManualPurchaseOutput> ApplyInternalLogicAsync(ExecuteManualPurchaseInput input, CancellationToken ct)
     {
-        // RN-049: Verificar se já foi executado para esta data
         if (await _buyOrderRepository.HasOrdersForDateAsync(input.DataReferencia, ct))
             throw new PurchaseAlreadyExecutedException(input.DataReferencia);
 
@@ -52,7 +54,7 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
 
         var activeClients = (await _clientRepository.GetAllActiveAsync(ct)).ToList();
         if (!activeClients.Any())
-            return new ExecuteManualPurchaseOutput(DateTime.UtcNow, 0, 0, [], [], [], 0, "Nenhum cliente ativo para processar.");
+            return CreateEmptyOutput();
 
         var masterAccount = await _accountRepository.GetMasterAccountAsync(ct)
             ?? throw new MasterAccountNotFoundException();
@@ -64,9 +66,18 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
             var clientesAporte = CalculateAportes(activeClients);
             decimal totalConsolidado = clientesAporte.Sum(x => x.Aporte);
 
-            var (ordens, quantidadesPorTicker, cotacoesPorTicker) = await ProcessConsolidatedPurchase(activeBasket, masterAccount, totalConsolidado, input.DataReferencia, ct);
+            var purchaseResult = await ProcessConsolidatedPurchase(activeBasket, masterAccount, totalConsolidado, input.DataReferencia, ct);
             
-            var (distribuicoes, eventosIR) = await DistributeAssetsToClients(activeClients, clientesAporte, activeBasket, masterAccount, quantidadesPorTicker, cotacoesPorTicker, totalConsolidado, ct);
+            var distributionResult = await DistributeAssetsToClients(
+                activeClients, 
+                clientesAporte, 
+                activeBasket, 
+                masterAccount, 
+                purchaseResult.Qtds, 
+                purchaseResult.Cotacoes, 
+                purchaseResult.OrdensIds, 
+                totalConsolidado, 
+                ct);
 
             var residuosMaster = await GetMasterResiduals(masterAccount.Id, ct);
 
@@ -76,10 +87,10 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
                 DateTime.UtcNow,
                 activeClients.Count,
                 totalConsolidado,
-                ordens,
-                distribuicoes,
+                purchaseResult.Ordens,
+                distributionResult.Distribuicoes,
                 residuosMaster,
-                eventosIR,
+                distributionResult.EventosIR,
                 $"Compra programada executada com sucesso para {activeClients.Count} clientes.");
         }
         catch (Exception ex)
@@ -90,6 +101,11 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
         }
     }
 
+    private ExecuteManualPurchaseOutput CreateEmptyOutput()
+    {
+        return new ExecuteManualPurchaseOutput(DateTime.UtcNow, 0, 0, [], [], [], 0, "Nenhum cliente ativo para processar.");
+    }
+
     private List<ClienteAporte> CalculateAportes(List<Client> clients)
     {
         return clients.Select(c => new ClienteAporte(
@@ -98,7 +114,7 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
         )).ToList();
     }
 
-    private async Task<(List<OrdemCompraOutput> Ordens, Dictionary<string, int> Qtds, Dictionary<string, decimal> Cotacoes)> ProcessConsolidatedPurchase(
+    private async Task<(List<OrdemCompraOutput> Ordens, Dictionary<string, int> Qtds, Dictionary<string, decimal> Cotacoes, Dictionary<string, long> OrdensIds)> ProcessConsolidatedPurchase(
         RecommendationBasket basket, 
         GraphicalAccount masterAccount, 
         decimal totalConsolidado, 
@@ -108,6 +124,7 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
         var ordens = new List<OrdemCompraOutput>();
         var qtds = new Dictionary<string, int>();
         var cotacoes = new Dictionary<string, decimal>();
+        var ordensIds = new Dictionary<string, long>();
 
         foreach (var item in basket.Items)
         {
@@ -130,22 +147,31 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
                 var detalhes = CreateOrderDetails(item.Ticker, quantidadeAComprar);
                 ordens.Add(new OrdemCompraOutput(item.Ticker, quantidadeAComprar, detalhes, quote.ClosingPrice, quantidadeAComprar * quote.ClosingPrice));
                 
-                // Salvar ordem real no banco
                 var buyOrder = new BuyOrder(masterAccount.Id, item.Ticker, quantidadeAComprar, quote.ClosingPrice, quantidadeAComprar >= 100 ? MarketType.Lote : MarketType.Fracionario, dataRef);
                 await _buyOrderRepository.AddAsync(buyOrder, ct);
+                ordensIds[item.Ticker] = buyOrder.Id;
 
-                if (masterCustody == null)
-                {
-                    await _custodyRepository.AddAsync(new Custody(masterAccount.Id, item.Ticker, quantidadeAComprar, quote.ClosingPrice), ct);
-                }
-                else
-                {
-                    masterCustody.AddToPosition(quantidadeAComprar, quote.ClosingPrice);
-                    await _custodyRepository.UpdateAsync(masterCustody, ct);
-                }
+                await UpdateMasterCustodyAsync(masterAccount.Id, masterCustody, item.Ticker, quantidadeAComprar, quote.ClosingPrice, ct);
+            }
+            else
+            {
+                ordensIds[item.Ticker] = 0; 
             }
         }
-        return (ordens, qtds, cotacoes);
+        return (ordens, qtds, cotacoes, ordensIds);
+    }
+
+    private async Task UpdateMasterCustodyAsync(long masterAccountId, Custody? currentCustody, string ticker, int quantity, decimal price, CancellationToken ct)
+    {
+        if (currentCustody == null)
+        {
+            await _custodyRepository.AddAsync(new Custody(masterAccountId, ticker, quantity, price), ct);
+        }
+        else
+        {
+            currentCustody.AddToPosition(quantity, price);
+            await _custodyRepository.UpdateAsync(currentCustody, ct);
+        }
     }
 
     private List<DetalheOrdemOutput> CreateOrderDetails(string ticker, int quantity)
@@ -167,6 +193,7 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
         GraphicalAccount masterAccount, 
         Dictionary<string, int> qtdsPorTicker, 
         Dictionary<string, decimal> cotacoesPorTicker, 
+        Dictionary<string, long> ordensIdsPorTicker,
         decimal totalConsolidado, 
         CancellationToken ct)
     {
@@ -181,14 +208,15 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
 
             foreach (var itemCesta in basket.Items)
             {
-                decimal proporcaoCliente = aporte.Aporte / totalConsolidado;
+                decimal proporcaoCliente = totalConsolidado > 0 ? aporte.Aporte / totalConsolidado : 0;
                 int qtdParaCliente = (int)(qtdsPorTicker[itemCesta.Ticker] * proporcaoCliente);
 
                 if (qtdParaCliente > 0)
                 {
                     await TransferFromMasterToClient(masterAccount.Id, clienteAccount.Id, itemCesta.Ticker, qtdParaCliente, cotacoesPorTicker[itemCesta.Ticker], ct);
+                    await RecordDistributionAsync(clienteAccount.Id, ordensIdsPorTicker[itemCesta.Ticker], itemCesta.Ticker, qtdParaCliente, cotacoesPorTicker[itemCesta.Ticker], ct);
+
                     ativosDistribuidos.Add(new AtivoDistribuidoOutput(itemCesta.Ticker, qtdParaCliente));
-                    
                     await PublishIRDedoDuro(aporte.Client, itemCesta.Ticker, qtdParaCliente, cotacoesPorTicker[itemCesta.Ticker], ct);
                     eventosIR++;
                 }
@@ -196,6 +224,16 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
             distribuicoes.Add(new DistribuicaoOutput(aporte.Client.Id, aporte.Client.Name, aporte.Aporte, ativosDistribuidos));
         }
         return (distribuicoes, eventosIR);
+    }
+
+    private async Task RecordDistributionAsync(long accountId, long orderId, string ticker, int quantity, decimal price, CancellationToken ct)
+    {
+        var clientCustody = await _custodyRepository.GetByTickerAsync(accountId, ticker, ct);
+        if (clientCustody != null)
+        {
+            var distributionRecord = new Distribution(orderId, clientCustody.Id, ticker, quantity, price);
+            await _distributionRepository.AddAsync(distributionRecord, ct);
+        }
     }
 
     private async Task TransferFromMasterToClient(long masterAccountId, long clientAccountId, string ticker, int quantity, decimal price, CancellationToken ct)

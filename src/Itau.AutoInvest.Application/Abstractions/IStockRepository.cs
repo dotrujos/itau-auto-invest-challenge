@@ -6,4 +6,5 @@ public interface IStockRepository
 {
     Task SaveAsync(StockQuote stock, CancellationToken cancellationToken);
     Task<StockQuote?> GetLatestQuoteAsync(string ticker, CancellationToken ct);
+    Task<StockQuote?> GetQuoteByTickerAndDateAsync(string ticker, DateTime date, CancellationToken ct);
 }

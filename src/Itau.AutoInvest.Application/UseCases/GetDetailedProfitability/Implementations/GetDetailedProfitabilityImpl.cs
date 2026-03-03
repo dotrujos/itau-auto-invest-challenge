@@ -1,6 +1,7 @@
 using Itau.AutoInvest.Application.Abstractions;
 using Itau.AutoInvest.Application.UseCases.GetClientPortfolio.IO;
 using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability.IO;
+using Itau.AutoInvest.Domain.Entities;
 using Itau.AutoInvest.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
@@ -35,19 +36,8 @@ public class GetDetailedProfitabilityImpl : GetDetailedProfitability
     {
         _logger.LogInformation("Consultando rentabilidade detalhada do cliente: {ClientId}", input.ClientId);
 
-        var client = await _clientRepository.GetByIdAsync(input.ClientId, ct);
-        if (client == null) 
-        {
-            _logger.LogWarning("Rentabilidade solicitada para cliente inexistente: {ClientId}", input.ClientId);
-            throw new ClientNotFoundException();
-        }
-
-        var account = await _graphicalAccountRepository.GetByClientIdAsync(client.Id, ct);
-        if (account == null) 
-        {
-            _logger.LogError("Conta gráfica não encontrada para o cliente {ClientId}", client.Id);
-            throw new EntityNotFoundException("CONTA_GRAFICA");
-        }
+        var client = await GetClientAsync(input.ClientId, ct);
+        var account = await GetAccountAsync(client.Id, ct);
         
         var distributions = (await _distributionRepository.GetByAccountIdAsync(account.Id, ct)).ToList();
         
@@ -61,51 +51,23 @@ public class GetDetailedProfitabilityImpl : GetDetailedProfitability
         var evolutionHistory = new List<EvolutionHistoryItem>();
 
         decimal cumulativeInvested = 0;
+        var currentHoldings = new Dictionary<string, int>();
 
         foreach (var group in groupedByDate)
         {
             var date = group.Key;
-            decimal totalValueInGroup = group.Sum(d => d.Quantity * d.UnitPrice);
+            decimal totalValueInGroup = ProcessGroupDistributions(group, currentHoldings);
             
-            string installment = date.Day switch
-            {
-                <= 10 => "1/3",
-                <= 20 => "2/3",
-                _ => "3/3"
-            };
-
-            aportesHistory.Add(new AporteHistoryItem(
-                date.ToString("yyyy-MM-dd"),
-                Math.Round(totalValueInGroup, 2),
-                installment
-            ));
+            aportesHistory.Add(CreateAporteHistoryItem(date, totalValueInGroup));
 
             cumulativeInvested += totalValueInGroup;
-            
-            decimal currentEvolutionProfitability = cumulativeInvested > 0 
-                ? ((cumulativeInvested / cumulativeInvested) - 1) * 100 
-                : 0;
 
-            evolutionHistory.Add(new EvolutionHistoryItem(
-                date.ToString("yyyy-MM-dd"),
-                Math.Round(cumulativeInvested, 2), 
-                Math.Round(cumulativeInvested, 2),
-                Math.Round(currentEvolutionProfitability, 2)
-            ));
+            decimal portfolioValueAtDate = await CalculatePortfolioValueAtDateAsync(currentHoldings, date, distributions, ct);
+            
+            evolutionHistory.Add(CreateEvolutionHistoryItem(date, portfolioValueAtDate, cumulativeInvested));
         }
         
-        var custodyItems = await _custodyRepository.GetByAccountIdAsync(account.Id, ct);
-        decimal totalInvestedNow = 0;
-        decimal currentTotalValueNow = 0;
-
-        foreach (var item in custodyItems)
-        {
-            var latestQuote = await _stockRepository.GetLatestQuoteAsync(item.Ticker, ct);
-            var currentQuote = latestQuote?.ClosingPrice ?? 0;
-
-            totalInvestedNow += (item.Quantity * item.AveragePrice);
-            currentTotalValueNow += (item.Quantity * currentQuote);
-        }
+        var (totalInvestedNow, currentTotalValueNow) = await CalculateCurrentPortfolioSummaryAsync(account.Id, ct);
 
         decimal totalProfitLoss = currentTotalValueNow - totalInvestedNow;
         decimal totalProfitLossPercentage = totalInvestedNow > 0 
@@ -127,5 +89,113 @@ public class GetDetailedProfitabilityImpl : GetDetailedProfitability
             aportesHistory,
             evolutionHistory
         );
+    }
+
+    private async Task<Client> GetClientAsync(long clientId, CancellationToken ct)
+    {
+        var client = await _clientRepository.GetByIdAsync(clientId, ct);
+        if (client == null) 
+        {
+            _logger.LogWarning("Rentabilidade solicitada para cliente inexistente: {ClientId}", clientId);
+            throw new ClientNotFoundException();
+        }
+        return client;
+    }
+
+    private async Task<GraphicalAccount> GetAccountAsync(long clientId, CancellationToken ct)
+    {
+        var account = await _graphicalAccountRepository.GetByClientIdAsync(clientId, ct);
+        if (account == null) 
+        {
+            _logger.LogError("Conta gráfica não encontrada para o cliente {ClientId}", clientId);
+            throw new EntityNotFoundException("CONTA_GRAFICA");
+        }
+        return account;
+    }
+
+    private decimal ProcessGroupDistributions(IEnumerable<Distribution> group, Dictionary<string, int> currentHoldings)
+    {
+        decimal totalValueInGroup = 0;
+        foreach (var distribution in group)
+        {
+            totalValueInGroup += distribution.Quantity * distribution.UnitPrice;
+            
+            if (!currentHoldings.ContainsKey(distribution.Ticker))
+                currentHoldings[distribution.Ticker] = 0;
+            
+            currentHoldings[distribution.Ticker] += distribution.Quantity;
+        }
+        return totalValueInGroup;
+    }
+
+    private AporteHistoryItem CreateAporteHistoryItem(DateTime date, decimal value)
+    {
+        string installment = date.Day switch
+        {
+            <= 10 => "1/3",
+            <= 20 => "2/3",
+            _ => "3/3"
+        };
+
+        return new AporteHistoryItem(
+            date.ToString("yyyy-MM-dd"),
+            Math.Round(value, 2),
+            installment
+        );
+    }
+
+    private async Task<decimal> CalculatePortfolioValueAtDateAsync(Dictionary<string, int> holdings, DateTime date, List<Distribution> allDistributions, CancellationToken ct)
+    {
+        decimal portfolioValueAtDate = 0;
+        foreach (var holding in holdings)
+        {
+            var quoteAtDate = await _stockRepository.GetQuoteByTickerAndDateAsync(holding.Key, date, ct);
+            var price = quoteAtDate?.ClosingPrice ?? 0;
+            
+            if (price == 0)
+            {
+                var tickerDistributions = allDistributions
+                    .Where(d => d.Ticker == holding.Key && d.DistributionDate.Date <= date.Date)
+                    .ToList();
+                
+                if (tickerDistributions.Any())
+                    price = tickerDistributions.Average(d => d.UnitPrice);
+            }
+
+            portfolioValueAtDate += holding.Value * price;
+        }
+        return portfolioValueAtDate;
+    }
+
+    private EvolutionHistoryItem CreateEvolutionHistoryItem(DateTime date, decimal portfolioValue, decimal investedValue)
+    {
+        decimal profitability = investedValue > 0 
+            ? ((portfolioValue / investedValue) - 1) * 100 
+            : 0;
+
+        return new EvolutionHistoryItem(
+            date.ToString("yyyy-MM-dd"),
+            Math.Round(portfolioValue, 2), 
+            Math.Round(investedValue, 2),
+            Math.Round(profitability, 2)
+        );
+    }
+
+    private async Task<(decimal Invested, decimal CurrentValue)> CalculateCurrentPortfolioSummaryAsync(long accountId, CancellationToken ct)
+    {
+        var custodyItems = await _custodyRepository.GetByAccountIdAsync(accountId, ct);
+        decimal totalInvested = 0;
+        decimal currentTotalValue = 0;
+
+        foreach (var item in custodyItems)
+        {
+            var latestQuote = await _stockRepository.GetLatestQuoteAsync(item.Ticker, ct);
+            var currentQuote = latestQuote?.ClosingPrice ?? 0;
+
+            totalInvested += (item.Quantity * item.AveragePrice);
+            currentTotalValue += (item.Quantity * currentQuote);
+        }
+
+        return (totalInvested, currentTotalValue);
     }
 }

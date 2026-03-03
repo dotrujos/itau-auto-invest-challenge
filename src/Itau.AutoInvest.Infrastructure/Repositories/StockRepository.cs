@@ -31,4 +31,14 @@ public class StockRepository : IStockRepository
             
         return table != null ? StockQuoteMapper.ToDomain(table) : null;
     }
+
+    public async Task<StockQuote?> GetQuoteByTickerAndDateAsync(string ticker, DateTime date, CancellationToken ct)
+    {
+        var table = await _context.Currencies
+            .Where(x => x.Ticker == ticker && x.PreachDate.Date <= date.Date)
+            .OrderByDescending(x => x.PreachDate)
+            .FirstOrDefaultAsync(ct);
+            
+        return table != null ? StockQuoteMapper.ToDomain(table) : null;
+    }
 }
