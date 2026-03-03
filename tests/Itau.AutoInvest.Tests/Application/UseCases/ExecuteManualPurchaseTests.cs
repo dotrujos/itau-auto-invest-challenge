@@ -81,6 +81,7 @@ namespace Itau.AutoInvest.Tests.Application.UseCases
                 new Mock<ICustodyRepository>(),
                 new Mock<IStockRepository>(),
                 new Mock<IBuyOrderRepository>(),
+                new Mock<IDistributionRepository>(),
                 new Mock<IKafkaProducer>(),
                 new Mock<IUnitOfWork>(),
                 new Mock<ILogger<ExecuteManualPurchaseImpl>>()
@@ -93,6 +94,7 @@ namespace Itau.AutoInvest.Tests.Application.UseCases
                 mocks.CustodyRepository.Object,
                 mocks.StockRepository.Object,
                 mocks.BuyOrderRepository.Object,
+                mocks.DistributionRepository.Object,
                 mocks.KafkaProducer.Object,
                 mocks.UnitOfWork.Object,
                 mocks.Logger.Object
@@ -108,6 +110,7 @@ namespace Itau.AutoInvest.Tests.Application.UseCases
             Mock<ICustodyRepository> CustodyRepository,
             Mock<IStockRepository> StockRepository,
             Mock<IBuyOrderRepository> BuyOrderRepository,
+            Mock<IDistributionRepository> DistributionRepository,
             Mock<IKafkaProducer> KafkaProducer,
             Mock<IUnitOfWork> UnitOfWork,
             Mock<ILogger<ExecuteManualPurchaseImpl>> Logger
