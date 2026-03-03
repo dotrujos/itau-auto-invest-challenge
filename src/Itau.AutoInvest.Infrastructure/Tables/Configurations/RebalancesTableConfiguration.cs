@@ -14,9 +14,9 @@ public class RebalancesTableConfiguration : IEntityTypeConfiguration<RebalancesT
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(x => x.RebalanceType)
-            .HasConversion<string>(
-                v => v.ToString().ToUpper(),
-                v => Enum.Parse<RebalanceType>(v, true))
+            .HasConversion(
+                v => v == RebalanceType.Mudanca_Cesta ? "MUNDANCA_CESTA" : v.ToString().ToUpper(),
+                v => v == "MUNDANCA_CESTA" ? RebalanceType.Mudanca_Cesta : Enum.Parse<RebalanceType>(v, true))
             .HasColumnType("ENUM('MUNDANCA_CESTA', 'DESVIO')");
 
         builder.Property(x => x.TickerPurchased).HasMaxLength(12);
