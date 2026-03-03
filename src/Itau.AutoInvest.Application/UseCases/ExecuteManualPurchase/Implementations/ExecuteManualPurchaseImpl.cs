@@ -216,6 +216,12 @@ public class ExecuteManualPurchaseImpl : ExecuteManualPurchase
                     await TransferFromMasterToClient(masterAccount.Id, clienteAccount.Id, itemCesta.Ticker, qtdParaCliente, cotacoesPorTicker[itemCesta.Ticker], ct);
                     
                     var orderId = ordensIdsPorTicker[itemCesta.Ticker];
+                    
+                    if (orderId == 0)
+                    {
+                        orderId = await _buyOrderRepository.GetLatestOrderIdByTickerAsync(itemCesta.Ticker, ct);
+                    }
+
                     if (orderId > 0)
                     {
                         await RecordDistributionAsync(clienteAccount.Id, orderId, itemCesta.Ticker, qtdParaCliente, cotacoesPorTicker[itemCesta.Ticker], ct);

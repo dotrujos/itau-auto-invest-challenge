@@ -29,4 +29,13 @@ public class BuyOrderRepository : IBuyOrderRepository
             .AsNoTracking()
             .AnyAsync(x => x.ExecutionDate.Date == targetDate, ct);
     }
+
+    public async Task<long> GetLatestOrderIdByTickerAsync(string ticker, CancellationToken ct)
+    {
+        return await _context.BuyOrder
+            .Where(x => x.Ticker == ticker)
+            .OrderByDescending(x => x.ExecutionDate)
+            .Select(x => x.Id)
+            .FirstOrDefaultAsync(ct);
+    }
 }
