@@ -19,7 +19,7 @@ public class GetBasketHistoryController : ControllerBase
     [HttpGet("historico")]
     [EndpointSummary("Histórico de cestas")]
     [EndpointDescription("Consulta o histórico de todas as cestas de recomendação (ativas e inativas).")]
-    [ProducesResponseType(typeof(GetBasketHistoryOutput), 200)]
+    [ProducesResponseType(typeof(GetBasketHistoryOutput), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetHistory(CancellationToken ct)
     {
         var input = new GetBasketHistoryInput();

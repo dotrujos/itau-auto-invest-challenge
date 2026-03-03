@@ -1,5 +1,6 @@
 using Itau.AutoInvest.Application.UseCases.CustomerExit;
 using Itau.AutoInvest.Application.UseCases.CustomerExit.IO;
+using Itau.AutoInvest.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itau.AutoInvest.WebApi.Controllers;
@@ -19,8 +20,9 @@ public class CustomerExitController : ControllerBase
     [HttpPost("{clienteId}/saida")]
     [EndpointSummary("Saída do cliente")]
     [EndpointDescription("Encerra a adesão do cliente ao produto.")]
-    [ProducesResponseType(typeof(CustomerExitOutput), 200)]
-    [ProducesResponseType(typeof(ProblemDetails), 404)]
+    [ProducesResponseType(typeof(CustomerExitOutput), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Exit([FromRoute] long clienteId, CancellationToken ct)
     {
         var input = new CustomerExitInput(clienteId);

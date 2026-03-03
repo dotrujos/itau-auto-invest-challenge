@@ -1,5 +1,6 @@
 using Itau.AutoInvest.Application.UseCases.UpdateRecommendationBasket;
 using Itau.AutoInvest.Application.UseCases.UpdateRecommendationBasket.IO;
+using Itau.AutoInvest.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itau.AutoInvest.WebApi.Controllers;
@@ -19,8 +20,9 @@ public class UpdateRecommendationBasketController : ControllerBase
     [HttpPost]
     [EndpointSummary("Atualizar cesta")]
     [EndpointDescription("Cadastra ou altera a Cesta Top Five de recomendação.")]
-    [ProducesResponseType(typeof(UpdateRecommendationBasketOutput), 201)]
-    [ProducesResponseType(typeof(ProblemDetails), 400)]
+    [ProducesResponseType(typeof(UpdateRecommendationBasketOutput), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] UpdateRecommendationBasketInput input, CancellationToken ct)
     {
         var output = await _updateRecommendationBasket.ExecuteAsync(input, ct);

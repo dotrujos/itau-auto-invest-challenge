@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Itau.AutoInvest.Domain.Exceptions;
+using Itau.AutoInvest.WebApi.Models;
 
 namespace Itau.AutoInvest.WebApi.Middlewares;
 
@@ -59,10 +60,10 @@ public class GlobalExceptionMiddleware
             _ => (int)HttpStatusCode.BadRequest
         };
 
-        var response = new
+        var response = new ErrorResponse
         {
-            erro = exception.Message,
-            codigo = exception.Code
+            Erro = exception.Message,
+            Codigo = exception.Code
         };
 
         return context.Response.WriteAsync(JsonSerializer.Serialize(response));
@@ -73,10 +74,10 @@ public class GlobalExceptionMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-        var response = new
+        var response = new ErrorResponse
         {
-            erro = "Ocorreu um erro interno inesperado no servidor.",
-            codigo = "ERRO_INTERNO"
+            Erro = "Ocorreu um erro interno inesperado no servidor.",
+            Codigo = "ERRO_INTERNO"
         };
 
         return context.Response.WriteAsync(JsonSerializer.Serialize(response));

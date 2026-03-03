@@ -1,5 +1,6 @@
 using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment;
 using Itau.AutoInvest.Application.UseCases.UpdateMonthlyInvestment.IO;
+using Itau.AutoInvest.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itau.AutoInvest.WebApi.Controllers;
@@ -19,12 +20,11 @@ public class UpdateMonthlyInvestmentController : ControllerBase
     [HttpPut("{clienteId}/valor-mensal")]
     [EndpointSummary("Atualizar aporte mensal")]
     [EndpointDescription("Altera o valor do aporte mensal do cliente.")]
-    [ProducesResponseType(typeof(UpdateMonthlyInvestmentOutput), 200)]
-    [ProducesResponseType(typeof(ProblemDetails), 400)]
-    [ProducesResponseType(typeof(ProblemDetails), 404)]
+    [ProducesResponseType(typeof(UpdateMonthlyInvestmentOutput), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateValue([FromRoute] long clienteId, [FromBody] UpdateMonthlyInvestmentInput input, CancellationToken ct)
     {
-        // Garante que o ID da rota seja o mesmo do input (que está ignorado no body)
         var updatedInput = input with { ClientId = clienteId };
         
         var output = await _updateMonthlyInvestment.ExecuteAsync(updatedInput, ct);

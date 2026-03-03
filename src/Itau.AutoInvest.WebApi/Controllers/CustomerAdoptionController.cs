@@ -1,5 +1,6 @@
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption;
 using Itau.AutoInvest.Application.UseCases.CustomerAdoption.IO;
+using Itau.AutoInvest.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itau.AutoInvest.WebApi.Controllers;
@@ -19,8 +20,8 @@ public class CustomerAdoptionController : ControllerBase
     [HttpPost("adesao")]
     [EndpointSummary("Adesão do cliente")]
     [EndpointDescription("Realiza a adesão do cliente ao produto de compra programada.")]
-    [ProducesResponseType(typeof(CustomerAdoptionOutput), 201)]
-    [ProducesResponseType(typeof(ProblemDetails), 400)]
+    [ProducesResponseType(typeof(CustomerAdoptionOutput), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Adopt([FromBody] CustomerAdoptionInput input, CancellationToken ct)
     {
         var output = await _customerAdoption.ExecuteAsync(input, ct);

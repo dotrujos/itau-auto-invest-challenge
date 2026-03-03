@@ -1,5 +1,6 @@
 using Itau.AutoInvest.Application.UseCases.ExecuteManualPurchase;
 using Itau.AutoInvest.Application.UseCases.ExecuteManualPurchase.IO;
+using Itau.AutoInvest.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itau.AutoInvest.WebApi.Controllers;
@@ -19,11 +20,11 @@ public class ExecuteManualPurchaseController : ControllerBase
     [HttpPost("executar-compra")]
     [EndpointSummary("Executar compra programada")]
     [EndpointDescription("Dispara o motor de compra programada para consolidar aportes e distribuir ativos entre clientes.")]
-    [ProducesResponseType(typeof(ExecuteManualPurchaseOutput), 200)]
-    [ProducesResponseType(typeof(ProblemDetails), 400)]
-    [ProducesResponseType(typeof(ProblemDetails), 404)]
-    [ProducesResponseType(typeof(ProblemDetails), 409)]
-    [ProducesResponseType(typeof(ProblemDetails), 500)]
+    [ProducesResponseType(typeof(ExecuteManualPurchaseOutput), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ExecuteManual([FromBody] ExecuteManualPurchaseInput input, CancellationToken ct)
     {
         var output = await _executeManualPurchase.ExecuteAsync(input, ct);

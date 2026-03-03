@@ -2,6 +2,7 @@ using Itau.AutoInvest.Application.UseCases.GetClientPortfolio;
 using Itau.AutoInvest.Application.UseCases.GetClientPortfolio.IO;
 using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability;
 using Itau.AutoInvest.Application.UseCases.GetDetailedProfitability.IO;
+using Itau.AutoInvest.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itau.AutoInvest.WebApi.Controllers;
@@ -23,8 +24,8 @@ public class GetClientPortfolioController : ControllerBase
     [HttpGet("{clienteId}/carteira")]
     [EndpointSummary("Consultar carteira")]
     [EndpointDescription("Consulta a carteira de custódia do cliente, incluindo ativos e resumo de PL.")]
-    [ProducesResponseType(typeof(GetClientPortfolioOutput), 200)]
-    [ProducesResponseType(typeof(ProblemDetails), 404)]
+    [ProducesResponseType(typeof(GetClientPortfolioOutput), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPortfolio([FromRoute] long clienteId, CancellationToken ct)
     {
         var input = new GetClientPortfolioInput(clienteId);
@@ -36,8 +37,8 @@ public class GetClientPortfolioController : ControllerBase
     [HttpGet("{clienteId}/rentabilidade")]
     [EndpointSummary("Consultar rentabilidade")]
     [EndpointDescription("Consulta a rentabilidade detalhada do cliente, histórico de aportes e evolução da carteira.")]
-    [ProducesResponseType(typeof(GetDetailedProfitabilityOutput), 200)]
-    [ProducesResponseType(typeof(ProblemDetails), 404)]
+    [ProducesResponseType(typeof(GetDetailedProfitabilityOutput), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProfitability([FromRoute] long clienteId, CancellationToken ct)
     {
         var input = new GetDetailedProfitabilityInput(clienteId);
