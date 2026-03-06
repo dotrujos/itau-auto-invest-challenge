@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Itau.AutoInvest.WebApi.Middlewares;
 using OpenTelemetry.Metrics;
 using Serilog;
-using Serilog.Sinks.Loki;
+using Serilog.Sinks.Grafana.Loki;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +13,11 @@ builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.Environment
 var lokiHttpUrl = builder.Configuration["Loki:ConnectionString"] ??
                   throw new ArgumentException("Loki:ConnectionString is null");
 Log.Logger = new LoggerConfiguration()
-    .Enrich.WithProperty("job", "itau-autoinvest-api")
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+    .Enrich.FromLogContext()
     .WriteTo.Console()
-    .WriteTo.LokiHttp(lokiHttpUrl)
+    .WriteTo.GrafanaLoki(lokiHttpUrl, new [] { new LokiLabel { Key = "job", Value = "itau-autoinvest-api" } })
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -70,6 +72,7 @@ app.UseMiddleware<RequestIdMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
+app.UseSerilogRequestLogging();
 app.MapControllers();
 
 app.Run();
