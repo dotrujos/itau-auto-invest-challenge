@@ -489,7 +489,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "count_over_time({job=\"itau-autoinvest-api\", level=\"error\"} [1h])",
+          "expr": "sum(count_over_time({job=\"itau-autoinvest-api\"} | json | detected_level=\"error\" [1h]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -776,6 +776,6 @@
   "timezone": "browser",
   "title": "Itau AutoInvest - Overview",
   "uid": "itau-overview",
-  "version": 9,
+  "version": 1,
   "weekStart": ""
 }
